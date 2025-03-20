@@ -68,14 +68,24 @@ function renderMarkdown(md) {
                     padding: 10px 40px 10px 10px;
                     border-radius: 5px;
                     margin: 10px 0;
+                    overflow-wrap: break-word;
                 }
                 code {
                     font-family: 'Inter', sans-serif;
                     font-size: 18px;
                     word-wrap: break-word;
+                    white-space: pre-wrap;
+                    overflow-wrap: break-word;
                 }
                 pre code {
                     display: block;
+                    white-space: pre-wrap;
+                    overflow-wrap: break-word;
+                }
+                .language-python, .language-javascript {
+                    white-space: pre-wrap !important;
+                    word-wrap: break-word !important;
+                    overflow-wrap: break-word !important;
                 }
                 .copy-btn {
                     position: absolute;
