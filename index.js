@@ -40,9 +40,20 @@ function renderMarkdown(md) {
             <meta charset="UTF-8">
             <title>Markdown Viewer</title>
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+            <style>
+                .markdown-body { font-size: 20px; }
+                pre, code { font-size: 18px; }
+            </style>
             <script>
                 document.addEventListener("DOMContentLoaded", () => {
+                    marked.setOptions({
+                        highlight: function(code, lang) {
+                            return hljs.highlightAuto(code).value;
+                        }
+                    });
                     document.getElementById("content").innerHTML = marked.parse(\`${md.replace(/`/g, '\\`')}\`);
                 });
             </script>
