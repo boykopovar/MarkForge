@@ -61,36 +61,34 @@ function renderMarkdown(md) {
                 pre {
                     position: relative;
                     font-family: 'Inter', sans-serif;
-                    font-size: 18px;
-                    word-wrap: break-word;
-                    white-space: pre-wrap;
+                    font-size: 16px;
                     background: #f5f5f5;
-                    padding: 10px 40px 10px 10px;
+                    padding: 10px 60px 10px 10px;
                     border-radius: 5px;
                     margin: 10px 0;
-                    overflow-wrap: break-word;
+                    overflow-x: auto;
+                    white-space: pre;
+                    word-wrap: normal;
+                }
+                pre.wrap {
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    overflow-x: hidden;
                 }
                 code {
                     font-family: 'Inter', sans-serif;
-                    font-size: 18px;
-                    word-wrap: break-word;
-                    white-space: pre-wrap;
-                    overflow-wrap: break-word;
+                    font-size: 16px;
                 }
                 pre code {
                     display: block;
-                    white-space: pre-wrap;
-                    overflow-wrap: break-word;
                 }
                 .language-python, .language-javascript {
-                    white-space: pre-wrap !important;
-                    word-wrap: break-word !important;
-                    overflow-wrap: break-word !important;
+                    white-space: inherit !important;
+                    word-wrap: inherit !important;
                 }
-                .copy-btn {
+                .copy-btn, .wrap-btn {
                     position: absolute;
                     top: 10px;
-                    right: 10px;
                     background: #e0e0e0;
                     border: none;
                     border-radius: 3px;
@@ -98,7 +96,13 @@ function renderMarkdown(md) {
                     cursor: pointer;
                     font-size: 16px;
                 }
-                .copy-btn:hover {
+                .copy-btn {
+                    right: 40px;
+                }
+                .wrap-btn {
+                    right: 10px;
+                }
+                .copy-btn:hover, .wrap-btn:hover {
                     background: #d0d0d0;
                 }
             </style>
@@ -111,15 +115,23 @@ function renderMarkdown(md) {
                     });
                     document.getElementById("content").innerHTML = marked.parse(\`${md.replace(/`/g, '\\`')}\`);
                     document.querySelectorAll("pre").forEach(pre => {
-                        const btn = document.createElement("button");
-                        btn.className = "copy-btn";
-                        btn.innerHTML = "📋";
-                        btn.onclick = () => {
+                        const copyBtn = document.createElement("button");
+                        copyBtn.className = "copy-btn";
+                        copyBtn.innerHTML = "📋";
+                        copyBtn.onclick = () => {
                             navigator.clipboard.writeText(pre.querySelector("code").innerText);
-                            btn.innerHTML = "✅";
-                            setTimeout(() => btn.innerHTML = "📋", 2000);
+                            copyBtn.innerHTML = "✅";
+                            setTimeout(() => copyBtn.innerHTML = "📋", 2000);
                         };
-                        pre.appendChild(btn);
+                        const wrapBtn = document.createElement("button");
+                        wrapBtn.className = "wrap-btn";
+                        wrapBtn.innerHTML = "↔️";
+                        wrapBtn.onclick = () => {
+                            pre.classList.toggle("wrap");
+                            wrapBtn.innerHTML = pre.classList.contains("wrap") ? "↕️" : "↔️";
+                        };
+                        pre.appendChild(copyBtn);
+                        pre.appendChild(wrapBtn);
                     });
                 });
             </script>
