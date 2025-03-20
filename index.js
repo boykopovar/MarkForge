@@ -41,15 +41,15 @@ function renderMarkdown(md) {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Markdown Viewer</title>
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
             <style>
-                .markdown-body { font-size: 28px; line-height: 1.5; word-wrap: break-word; }
-                pre, code { font-size: 24px; white-space: pre-wrap; word-wrap: break-word; }
+                .markdown-body { font-size: 36px !important; line-height: 1.6; word-wrap: break-word; }
+                pre, code { font-size: 32px !important; white-space: pre-wrap; word-wrap: break-word; }
                 @media (max-width: 600px) {
-                    .markdown-body { font-size: 20px; }
-                    pre, code { font-size: 18px; }
+                    .markdown-body { font-size: 28px !important; }
+                    pre, code { font-size: 24px !important; }
                 }
             </style>
             <script>
