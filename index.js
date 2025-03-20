@@ -1,18 +1,18 @@
 const MAX_FILES = 100;
 
 export default {
-    async fetch(request) {
-        const { pathname, searchParams } = new URL(request.url);
+    async fetch(request, env) {
+        const { pathname } = new URL(request.url);
 
         if (request.method === "POST") {
             let markdownText = await request.text();
             let pageId = generateId();
 
-            await KV_NAMESPACE.put(pageId, markdownText);
+            await env.KV.put(pageId, markdownText);
 
-            await updateFileList(pageId);
+            await updateFileList(pageId, env);
 
-            return new Response(`https://your-worker-name.workers.dev/view/${pageId}`, {
+            return new Response(`${url.origin}/view/${pageId}`, {
                 headers: { "Content-Type": "text/plain" },
             });
         }
@@ -20,7 +20,7 @@ export default {
         let pathParts = pathname.split("/");
         if (pathParts.includes("view")) {
             let pageId = pathParts[pathParts.length - 1];
-            let markdownText = await KV_NAMESPACE.get(pageId) || "# Ошибка\nКонтент не найден.";
+            let markdownText = await env.KV.get(pageId) || "# Ошибка\nКонтент не найден.";
             return new Response(renderMarkdown(markdownText), {
                 headers: { "Content-Type": "text/html" },
             });
@@ -54,21 +54,20 @@ function renderMarkdown(md) {
     `;
 }
 
-
 function generateId() {
     return Math.random().toString(36).substring(2, 10);
 }
 
-async function updateFileList(newFileId) {
-    let fileListJson = await KV_NAMESPACE.get("file_list");
+async function updateFileList(newFileId, env) {
+    let fileListJson = await env.KV.get("file_list");
     let fileList = fileListJson ? JSON.parse(fileListJson) : [];
 
     fileList.unshift(newFileId);
 
     while (fileList.length > MAX_FILES) {
         let oldFileId = fileList.pop();
-        await KV_NAMESPACE.delete(oldFileId);
+        await env.KV.delete(oldFileId);
     }
 
-    await KV_NAMESPACE.put("file_list", JSON.stringify(fileList));
+    await env.KV.put("file_list", JSON.stringify(fileList));
 }
