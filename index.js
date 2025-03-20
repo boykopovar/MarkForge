@@ -41,6 +41,7 @@ function renderMarkdown(md) {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Markdown Viewer</title>
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -64,7 +65,7 @@ function renderMarkdown(md) {
                     word-wrap: break-word;
                     white-space: pre-wrap;
                     background: #f5f5f5;
-                    padding: 10px;
+                    padding: 10px 40px 10px 10px;
                     border-radius: 5px;
                     margin: 10px 0;
                 }
@@ -75,7 +76,6 @@ function renderMarkdown(md) {
                 }
                 pre code {
                     display: block;
-                    color: #000000;
                 }
                 .copy-btn {
                     position: absolute;
