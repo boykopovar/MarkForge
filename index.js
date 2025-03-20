@@ -41,22 +41,33 @@ function renderMarkdown(md) {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Markdown Viewer</title>
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
             <style>
-                .markdown-body { font-size: 36px !important; line-height: 1.6; word-wrap: break-word; }
-                pre, code { font-size: 32px !important; white-space: pre-wrap; word-wrap: break-word; }
-                @media (max-width: 600px) {
-                    .markdown-body { font-size: 28px !important; }
-                    pre, code { font-size: 24px !important; }
+                body { margin: 0; padding: 0; }
+                .markdown-body { 
+                    font-size: 40px; 
+                    line-height: 1.4; 
+                    word-wrap: break-word; 
+                    padding: 20px; 
+                    box-sizing: border-box; 
+                    width: 100vw; 
+                    min-height: 100vh; 
+                }
+                pre, code { 
+                    font-size: 36px; 
+                    white-space: pre-wrap; 
+                    word-wrap: break-word; 
                 }
             </style>
             <script>
                 document.addEventListener("DOMContentLoaded", () => {
                     marked.setOptions({
                         highlight: function(code, lang) {
-                            return hljs.highlightAuto(code).value;
+                            return Prism.highlight(code, Prism.languages[lang] || Prism.languages.javascript, lang);
                         }
                     });
                     document.getElementById("content").innerHTML = marked.parse(\`${md.replace(/`/g, '\\`')}\`);
@@ -64,7 +75,7 @@ function renderMarkdown(md) {
             </script>
         </head>
         <body class="markdown-body">
-            <div id="content" style="max-width: 800px; margin: auto; padding: 20px;"></div>
+            <div id="content"></div>
         </body>
         </html>
     `;
