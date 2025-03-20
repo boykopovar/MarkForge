@@ -41,12 +41,14 @@ function renderMarkdown(md) {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Markdown Viewer</title>
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+            <link rel="stylesheet" href="https://unpkg.com/prismjs@1.29.0/themes/prism.css">
+            <link rel="stylesheet" href="https://unpkg.com/prismjs@1.29.0/plugins/toolbar/prism-toolbar.css">
+            <script src="https://unpkg.com/prismjs@1.29.0/components/prism-core.min.js"></script>
+            <script src="https://unpkg.com/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.js"></script>
+            <script src="https://unpkg.com/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
+            <script src="https://unpkg.com/prismjs@1.29.0/components/prism-python.min.js"></script>
+            <script src="https://unpkg.com/prismjs@1.29.0/components/prism-javascript.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
             <style>
                 body { margin: 0; padding: 0; background: #ffffff; color: #000000; }
                 .markdown-body { 
@@ -64,6 +66,7 @@ function renderMarkdown(md) {
                     font-size: 18px; 
                     word-wrap: break-word; 
                     white-space: pre-wrap; 
+                    background: #f5f5f5; 
                     padding: 10px; 
                     border-radius: 5px; 
                     position: relative; 
@@ -72,18 +75,25 @@ function renderMarkdown(md) {
                     font-family: 'Inter', sans-serif; 
                     font-size: 18px; 
                     word-wrap: break-word; 
+                    color: #d32f2f; 
                 }
-                .copy-btn { 
+                pre code { color: #000000; }
+                .prism-toolbar { 
                     position: absolute; 
-                    top: 10px; 
-                    right: 10px; 
-                    background: #f0f0f0; 
-                    border: none; 
-                    padding: 5px 10px; 
-                    cursor: pointer; 
-                    border-radius: 3px; 
+                    top: 5px; 
+                    right: 5px; 
                 }
-                .copy-btn:hover { background: #e0e0e0; }
+                .copy-to-clipboard-button { 
+                    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>') no-repeat center; 
+                    background-size: contain; 
+                    width: 24px; 
+                    height: 24px; 
+                    text-indent: -9999px; 
+                    border: none; 
+                    padding: 0; 
+                    margin: 0; 
+                    cursor: pointer; 
+                }
             </style>
             <script>
                 document.addEventListener("DOMContentLoaded", () => {
@@ -93,20 +103,8 @@ function renderMarkdown(md) {
                         }
                     });
                     document.getElementById("content").innerHTML = marked.parse(\`${md.replace(/`/g, '\\`')}\`);
-                    document.querySelectorAll('pre').forEach((pre) => {
-                        const btn = document.createElement('button');
-                        btn.textContent = 'Copy';
-                        btn.className = 'copy-btn';
-                        pre.appendChild(btn);
-                        new ClipboardJS(btn, {
-                            text: function() {
-                                return pre.querySelector('code').textContent;
-                            }
-                        });
-                        btn.addEventListener('click', () => {
-                            btn.textContent = 'Copied!';
-                            setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
-                        });
+                    Prism.plugins.toolbar.registerButton('copy-to-clipboard', function(env) {
+                        return env.element.querySelector('.copy-to-clipboard-button');
                     });
                 });
             </script>
