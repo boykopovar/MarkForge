@@ -40,14 +40,15 @@ function renderMarkdown(md) {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Markdown Viewer</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
             <style>
-                body { margin: 0; padding: 0; }
+                body { margin: 0; padding: 0; background: #0d1117; color: #c9d1d9; }
                 .markdown-body { 
-                    font-size: 40px; 
+                    font-size: 32px; 
                     line-height: 1.4; 
                     word-wrap: break-word; 
                     padding: 20px; 
@@ -56,7 +57,7 @@ function renderMarkdown(md) {
                     min-height: 100vh; 
                 }
                 pre, code { 
-                    font-size: 36px; 
+                    font-size: 28px; 
                     white-space: pre-wrap; 
                     word-wrap: break-word; 
                 }
