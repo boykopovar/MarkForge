@@ -1,8 +1,9 @@
-const MAX_FILES = 100;
+const MAX_FILES = 200;
 
 export default {
     async fetch(request, env) {
-        const { pathname } = new URL(request.url);
+        const url = new URL(request.url);
+        const { pathname } = url;
 
         if (request.method === "POST") {
             let markdownText = await request.text();
@@ -39,7 +40,7 @@ function renderMarkdown(md) {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Markdown Viewer</title>
+            <title>MD Viewer</title>
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
@@ -57,23 +58,25 @@ function renderMarkdown(md) {
                     box-sizing: border-box;
                     width: 100vw;
                     min-height: 100vh;
+                    text-align: left;
+                }
+                @media (min-width: 768px) {
+                    .container {
+                        width: 70%;
+                        margin: 0 auto;
+                    }
                 }
                 pre {
                     position: relative;
                     font-family: 'Inter', sans-serif;
                     font-size: 16px;
                     background: #f5f5f5;
-                    padding: 10px 60px 10px 10px;
+                    padding: 10px 40px 10px 10px; /* Уменьшаем правый padding, так как убрали одну кнопку */
                     border-radius: 5px;
                     margin: 10px 0;
-                    overflow-x: auto;
-                    white-space: pre;
-                    word-wrap: normal;
-                }
-                pre.wrap {
-                    white-space: pre-wrap;
-                    word-wrap: break-word;
-                    overflow-x: hidden;
+                    overflow-x: auto; /* Всегда прокручивается горизонтально */
+                    white-space: pre; /* Сохраняем пробелы и переносы */
+                    word-wrap: normal; /* Без переноса слов */
                 }
                 code {
                     font-family: 'Inter', sans-serif;
@@ -86,9 +89,10 @@ function renderMarkdown(md) {
                     white-space: inherit !important;
                     word-wrap: inherit !important;
                 }
-                .copy-btn, .wrap-btn {
+                .copy-btn {
                     position: absolute;
                     top: 10px;
+                    right: 10px; /* Теперь единственная кнопка, сдвигаем ближе к краю */
                     background: #e0e0e0;
                     border: none;
                     border-radius: 3px;
@@ -96,14 +100,21 @@ function renderMarkdown(md) {
                     cursor: pointer;
                     font-size: 16px;
                 }
-                .copy-btn {
-                    right: 40px;
-                }
-                .wrap-btn {
-                    right: 10px;
-                }
-                .copy-btn:hover, .wrap-btn:hover {
+                .copy-btn:hover {
                     background: #d0d0d0;
+                }
+                .footer {
+                    margin-top: 20px;
+                    font-size: 14px;
+                    color: #666;
+                    text-align: center;
+                }
+                .footer a {
+                    color: #0066cc;
+                    text-decoration: none;
+                }
+                .footer a:hover {
+                    text-decoration: underline;
                 }
             </style>
             <script>
@@ -123,21 +134,16 @@ function renderMarkdown(md) {
                             copyBtn.innerHTML = "✅";
                             setTimeout(() => copyBtn.innerHTML = "📋", 2000);
                         };
-                        const wrapBtn = document.createElement("button");
-                        wrapBtn.className = "wrap-btn";
-                        wrapBtn.innerHTML = "↔️";
-                        wrapBtn.onclick = () => {
-                            pre.classList.toggle("wrap");
-                            wrapBtn.innerHTML = pre.classList.contains("wrap") ? "↕️" : "↔️";
-                        };
                         pre.appendChild(copyBtn);
-                        pre.appendChild(wrapBtn);
                     });
                 });
             </script>
         </head>
         <body>
             <div class="container" id="content"></div>
+            <div class="footer">
+                Developed by <a href="https://github.com/boykopovar/md" target="_blank">boykopovar</a>
+            </div>
         </body>
         </html>
     `;
