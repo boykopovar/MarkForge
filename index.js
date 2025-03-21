@@ -245,8 +245,7 @@ function renderMarkdown(md) {
         border-radius: 4px;
         font-family: 'Inter', sans-serif;
     }
-    div.MathJax {
-        max-width: 100%;
+    .MathJax_Display {
         overflow-x: auto;
     }
 </style>
