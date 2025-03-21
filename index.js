@@ -1,6 +1,6 @@
 import { marked } from "marked";
 
-const MAX_FILES = 260;
+const MAX_FILES = 250;
 
 export default {
     async fetch(request, env) {
@@ -89,24 +89,6 @@ async function updateFileList(newFileId, env) {
     }
 }
 
-function protectMathFormulas(text) {
-    return text
-        .replace(/\\\\\(/g, "{{MATH_INLINE_START}}")
-        .replace(/\\\\\)/g, "{{MATH_INLINE_END}}")
-        .replace(/\\\\\[/g, "{{MATH_DISPLAY_START}}")
-        .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
-        .replace(/\$\$/g, "{{MATH_DOLLAR}}")
-        .replace(/\\,/g, "");
-}
-
-function restoreMathFormulas(html) {
-    return html
-        .replace(/{{MATH_INLINE_START}}/g, '\\(')
-        .replace(/{{MATH_INLINE_END}}/g, '\\)')
-        .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
-        .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
-        .replace(/{{MATH_DOLLAR}}/g, '$$');
-}
 
 function renderMarkdown(md) {
     const protectedMd = protectMathFormulas(md);
@@ -245,12 +227,13 @@ function renderMarkdown(md) {
         border-radius: 4px;
         font-family: 'Inter', sans-serif;
     }
-    .MathJax_Display {
-    overflow-x: auto;
-    max-width: 100%;
-    display: block;
-    white-space: nowrap;
-}
+    .math-container {
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+        margin: 10px 0;
+        padding: 5px;
+    }
 </style>
 </head>
 <body>
@@ -263,19 +246,24 @@ function renderMarkdown(md) {
     </div>
     <script>
         function protectMathFormulas(text) {
-            return text
-                .replace(/\\\\\\(/g, "{{MATH_INLINE_START}}")
-                .replace(/\\\\\\)/g, "{{MATH_INLINE_END}}")
-                .replace(/\\\\\\[/g, "{{MATH_DISPLAY_START}}")
-                .replace(/\\\\\\]/g, "{{MATH_DISPLAY_END}}");
+        text = text.replace(/\\\[(.*?)\\\]/gs, '<div class="math-container">\\[$1\\]</div>');
+        text = text.replace(/\$\$(.*?)\$\$/gs, '<div class="math-container">$$ $1 $$</div>');
+        return text
+            .replace(/\\\\\(/g, "{{MATH_INLINE_START}}")
+            .replace(/\\\\\)/g, "{{MATH_INLINE_END}}")
+            .replace(/\\\\\[/g, "{{MATH_DISPLAY_START}}")
+            .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
+            .replace(/\$\$/g, "{{MATH_DOLLAR}}")
+            .replace(/\\,/g, "");
         }
-
+        
         function restoreMathFormulas(html) {
             return html
-                .replace(/{{MATH_INLINE_START}}/g, '\\\\(')
-                .replace(/{{MATH_INLINE_END}}/g, '\\\\)')
-                .replace(/{{MATH_DISPLAY_START}}/g, '\\\\[')
-                .replace(/{{MATH_DISPLAY_END}}/g, '\\\\]');
+                .replace(/{{MATH_INLINE_START}}/g, '\\(')
+                .replace(/{{MATH_INLINE_END}}/g, '\\)')
+                .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
+                .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
+                .replace(/{{MATH_DOLLAR}}/g, '$$');
         }
 
         function updateContent() {
