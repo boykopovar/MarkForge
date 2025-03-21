@@ -186,7 +186,7 @@ function renderMarkdown(md) {
     }
     pre code {
         font-family: 'Inter', sans-serif;
-        background: none;
+        background: #f5f5f5;
         padding: 0;
         font-size: 16px;
     }
