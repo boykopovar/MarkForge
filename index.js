@@ -34,6 +34,8 @@ export default {
 };
 
 function renderMarkdown(md) {
+    const fixedMarkdown = md.replace(/\\/g, '\\\\');
+
     return `
         <!DOCTYPE html>
         <html>
@@ -47,6 +49,7 @@ function renderMarkdown(md) {
             <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
             <style>
                 body { margin: 0; padding: 0; background: #ffffff; color: #000000; }
                 .container {
@@ -61,29 +64,32 @@ function renderMarkdown(md) {
                     text-align: left;
                 }
                 @media (min-width: 768px) {
-                    .container {
-                        width: 70%;
-                        margin: 0 auto;
-                    }
+                    .container { width: 70%; margin: 0 auto; }
                 }
                 pre {
                     position: relative;
                     font-family: 'Inter', sans-serif;
                     font-size: 16px;
                     background: #f5f5f5;
-                    padding: 10px 40px 10px 10px; /* Уменьшаем правый padding, так как убрали одну кнопку */
+                    padding: 10px 40px 10px 10px;
                     border-radius: 5px;
                     margin: 10px 0;
-                    overflow-x: auto; /* Всегда прокручивается горизонтально */
-                    white-space: pre; /* Сохраняем пробелы и переносы */
-                    word-wrap: normal; /* Без переноса слов */
+                    overflow-x: auto;
+                    white-space: pre;
+                    word-wrap: normal;
                 }
                 code {
-                    font-family: 'Inter', sans-serif;
-                    font-size: 16px;
+                    font-family: monospace;
+                    font-size: inherit;
+                    background: #f5f5f5;
+                    padding: 2px 4px;
+                    border-radius: 3px;
                 }
                 pre code {
-                    display: block;
+                    font-family: 'Inter', sans-serif;
+                    background: none;
+                    padding: 0;
+                    font-size: 16px;
                 }
                 .language-python, .language-javascript {
                     white-space: inherit !important;
@@ -92,7 +98,7 @@ function renderMarkdown(md) {
                 .copy-btn {
                     position: absolute;
                     top: 10px;
-                    right: 10px; /* Теперь единственная кнопка, сдвигаем ближе к краю */
+                    right: 10px;
                     background: #e0e0e0;
                     border: none;
                     border-radius: 3px;
@@ -100,31 +106,43 @@ function renderMarkdown(md) {
                     cursor: pointer;
                     font-size: 16px;
                 }
-                .copy-btn:hover {
-                    background: #d0d0d0;
-                }
+                .copy-btn:hover { background: #d0d0d0; }
                 .footer {
                     margin-top: 20px;
                     font-size: 14px;
                     color: #666;
                     text-align: center;
                 }
-                .footer a {
-                    color: #0066cc;
-                    text-decoration: none;
+                .footer a { color: #0066cc; text-decoration: none; }
+                .footer a:hover { text-decoration: underline; }
+                table {
+                    display: block;
+                    overflow-x: auto;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 18px;
                 }
-                .footer a:hover {
-                    text-decoration: underline;
+                th, td {
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    text-align: left;
                 }
+                th {
+                    background: #f5f5f5;
+                    font-weight: 700;
+                }
+                tr:nth-child(even) { background: #fafafa; }
+                tr:hover { background: #f0f0f0; }
             </style>
             <script>
+                marked.setOptions({
+                    highlight: function(code, lang) {
+                        return Prism.highlight(code, Prism.languages[lang] || Prism.languages.javascript, lang);
+                    }
+                });
+                document.getElementById("content").innerHTML = marked.parse(\`${fixedMarkdown.replace(/`/g, '\\`')}\`);
                 document.addEventListener("DOMContentLoaded", () => {
-                    marked.setOptions({
-                        highlight: function(code, lang) {
-                            return Prism.highlight(code, Prism.languages[lang] || Prism.languages.javascript, lang);
-                        }
-                    });
-                    document.getElementById("content").innerHTML = marked.parse(\`${md.replace(/`/g, '\\`')}\`);
                     document.querySelectorAll("pre").forEach(pre => {
                         const copyBtn = document.createElement("button");
                         copyBtn.className = "copy-btn";
@@ -136,6 +154,7 @@ function renderMarkdown(md) {
                         };
                         pre.appendChild(copyBtn);
                     });
+                    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
                 });
             </script>
         </head>
