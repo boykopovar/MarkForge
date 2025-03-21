@@ -169,7 +169,7 @@ function renderMarkdown(md) {
         position: relative;
         font-family: 'Inter', sans-serif;
         font-size: 16px;
-        background: #f5f5f5;
+
         padding: 10px 40px 10px 10px;
         border-radius: 5px;
         margin: 10px 0;
@@ -180,7 +180,7 @@ function renderMarkdown(md) {
     code {
         font-family: monospace;
         font-size: inherit;
-        background: #f5f5f5;
+
         padding: 2px 4px;
         border-radius: 3px;
     }
