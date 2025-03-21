@@ -246,8 +246,11 @@ function renderMarkdown(md) {
         font-family: 'Inter', sans-serif;
     }
     .MathJax_Display {
-        overflow-x: auto;
-    }
+    overflow-x: auto;
+    max-width: 100%;
+    display: block;
+    white-space: nowrap;
+}
 </style>
 </head>
 <body>
