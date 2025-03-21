@@ -88,7 +88,26 @@ async function updateFileList(newFileId, env) {
         console.error("Ошибка при обновлении списка файлов:", e);
     }
 }
-
+function protectMathFormulas(text) {
+        text = text.replace(/\\\[(.*?)\\\]/gs, '<div class="math-container">\\[$1\\]</div>');
+        text = text.replace(/\$\$(.*?)\$\$/gs, '<div class="math-container">$$ $1 $$</div>');
+        return text
+            .replace(/\\\\\(/g, "{{MATH_INLINE_START}}")
+            .replace(/\\\\\)/g, "{{MATH_INLINE_END}}")
+            .replace(/\\\\\[/g, "{{MATH_DISPLAY_START}}")
+            .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
+            .replace(/\$\$/g, "{{MATH_DOLLAR}}")
+            .replace(/\\,/g, "");
+        }
+        
+function restoreMathFormulas(html) {
+    return html
+        .replace(/{{MATH_INLINE_START}}/g, '\\(')
+        .replace(/{{MATH_INLINE_END}}/g, '\\)')
+        .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
+        .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
+        .replace(/{{MATH_DOLLAR}}/g, '$$');
+}
 
 function renderMarkdown(md) {
     const protectedMd = protectMathFormulas(md);
