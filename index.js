@@ -1,6 +1,6 @@
 import { marked } from "marked";
 
-const MAX_FILES = 250;
+const MAX_FILES = 260;
 
 export default {
     async fetch(request, env) {
