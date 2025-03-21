@@ -261,21 +261,18 @@ function renderMarkdown(md) {
     <script>
         function protectMathFormulas(text) {
             return text
-                .replace(/\\\\\(/g, "{{MATH_INLINE_START}}")
-                .replace(/\\\\\)/g, "{{MATH_INLINE_END}}")
-                .replace(/\\\\\[/g, "{{MATH_DISPLAY_START}}")
-                .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
-                .replace(/\$\$/g, "{{MATH_DOLLAR}}")
-                .replace(/\\,/g, "");
+                .replace(/\\\\\\(/g, "{{MATH_INLINE_START}}")
+                .replace(/\\\\\\)/g, "{{MATH_INLINE_END}}")
+                .replace(/\\\\\\[/g, "{{MATH_DISPLAY_START}}")
+                .replace(/\\\\\\]/g, "{{MATH_DISPLAY_END}}");
         }
-        
+
         function restoreMathFormulas(html) {
             return html
-                .replace(/{{MATH_INLINE_START}}/g, '\\(')
-                .replace(/{{MATH_INLINE_END}}/g, '\\)')
-                .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
-                .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
-                .replace(/{{MATH_DOLLAR}}/g, '$$');
+                .replace(/{{MATH_INLINE_START}}/g, '\\\\(')
+                .replace(/{{MATH_INLINE_END}}/g, '\\\\)')
+                .replace(/{{MATH_DISPLAY_START}}/g, '\\\\[')
+                .replace(/{{MATH_DISPLAY_END}}/g, '\\\\]');
         }
 
         function updateContent() {
