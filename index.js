@@ -256,7 +256,7 @@ function renderMarkdown(md) {
         <div id="content">${restoredHtml}</div>
     </div>
     <div class="footer">
-        Developed by <a href="https://github.com/boykopovar/md" target="_blank">boykopovar</a>
+        Developed by <a href="https://github.com/boykopovar/MarkForge" target="_blank">boykopovar</a>
     </div>
     <script>
         function protectMathFormulas(text) {
