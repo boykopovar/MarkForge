@@ -46,6 +46,28 @@ export default {
                 });
             }
 
+            if (pathParts.includes("raw")) {
+                const pageId = pathParts[pathParts.length - 1];
+                let markdownText;
+                try {
+                    markdownText = await env.KV.get(pageId);
+                    if (markdownText === null) {
+                        return new Response("# Ошибка\nКонтент не найден.", {
+                            status: 404,
+                            headers: { "Content-Type": "text/plain" },
+                        });
+                    }
+                } catch (e) {
+                    return new Response("# Ошибка\nНе удалось получить контент.", {
+                        status: 500,
+                        headers: { "Content-Type": "text/plain" },
+                    });
+                }
+                return new Response(markdownText, {
+                    headers: { "Content-Type": "text/plain" },
+                });
+            }
+
             return new Response("Используйте POST-запрос для загрузки Markdown", {
                 headers: { "Content-Type": "text/plain" },
             });
