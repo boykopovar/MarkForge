@@ -143,27 +143,21 @@ function renderMarkdown(md) {
     }
     h1 {
         font-size: 32px;
-        text-indent: 20px;
     }
     h2 {
         font-size: 28px;
-        text-indent: 20px;
     }
     h3 {
         font-size: 24px;
-        text-indent: 20px;
     }
     h4 {
         font-size: 20px;
-        text-indent: 20px;
     }
     h5 {
         font-size: 18px;
-        text-indent: 20px;
     }
     h6 {
         font-size: 16px;
-        text-indent: 20px;
     }
     pre {
         position: relative;
