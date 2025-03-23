@@ -46,7 +46,7 @@ export default {
                 });
             }
 
-            if (pathParts.includes("raw")) {
+            if (pathParts[1] === "raw") {
                 const pageId = pathParts[pathParts.length - 1];
                 let markdownText;
                 try {
@@ -54,17 +54,17 @@ export default {
                     if (markdownText === null) {
                         return new Response("# Ошибка\nКонтент не найден.", {
                             status: 404,
-                            headers: { "Content-Type": "text/plain" },
+                            headers: { "Content-Type": "text/plain; charset=utf-8" },
                         });
                     }
                 } catch (e) {
                     return new Response("# Ошибка\nНе удалось получить контент.", {
                         status: 500,
-                        headers: { "Content-Type": "text/plain" },
+                        headers: { "Content-Type": "text/plain; charset=utf-8" },
                     });
                 }
                 return new Response(markdownText, {
-                    headers: { "Content-Type": "text/plain" },
+                    headers: { "Content-Type": "text/plain; charset=utf-8" },
                 });
             }
 
