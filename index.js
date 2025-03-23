@@ -119,7 +119,7 @@ function protectMathFormulas(text) {
         .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
         .replace(/\$\$/g, "{{MATH_DOLLAR}}")
         .replace(/\\,/g, "")
-        .replace(/\\intab\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$1}^{$2}");
+        .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$2}^{$3}");
 }
 
 function restoreMathFormulas(html) {
@@ -283,7 +283,7 @@ function renderMarkdown(md) {
                 .replace(/\\\\\\)/g, "{{MATH_INLINE_END}}")
                 .replace(/\\\\\\[/g, "{{MATH_DISPLAY_START}}")
                 .replace(/\\\\\\]/g, "{{MATH_DISPLAY_END}}")
-                .replace(/\\intab\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$1}^{$2}");
+                .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$2}^{$3}");
         }
 
         function restoreMathFormulas(html) {
