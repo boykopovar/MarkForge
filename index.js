@@ -156,6 +156,13 @@ function renderChatMarkdown(chat) {
 }
 
 function renderMarkdown(md) {
+    // Убираем обёртку ```markdown ... ``` если она есть
+    const pattern = /^```markdown\n([\s\S]*)\n```$/;
+    const match = md.match(pattern);
+    if (match) {
+        md = match[1];
+    }
+
     let chatData;
     let isChatJson = false;
 
