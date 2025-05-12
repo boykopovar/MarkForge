@@ -165,24 +165,12 @@ function renderMarkdown(md) {
     @media (min-width: 768px) {
         .container { width: 70%; margin: 0 auto; }
     }
-    h1 {
-        font-size: 32px;
-    }
-    h2 {
-        font-size: 28px;
-    }
-    h3 {
-        font-size: 24px;
-    }
-    h4 {
-        font-size: 20px;
-    }
-    h5 {
-        font-size: 18px;
-    }
-    h6 {
-        font-size: 16px;
-    }
+    h1 { font-size: 32px; }
+    h2 { font-size: 28px; }
+    h3 { font-size: 24px; }
+    h4 { font-size: 20px; }
+    h5 { font-size: 18px; }
+    h6 { font-size: 16px; }
     pre {
         position: relative;
         font-family: 'Inter', sans-serif;
