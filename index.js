@@ -198,10 +198,15 @@ function renderMarkdown(md) {
         word-wrap: break-word;
         padding: 20px;
         box-sizing: border-box;
-        width: 70%;
+        width: 100%;
         min-height: 100vh;
-        margin: 0 auto;
         text-align: left;
+    }
+    @media (min-width: 768px) {
+        .container {
+            width: 70%;
+            margin: 0 auto;
+        }
     }
     .chat-container {
         background: #ffffff;
@@ -210,6 +215,15 @@ function renderMarkdown(md) {
         padding: 20px;
         min-height: 400px;
         overflow-y: auto;
+    }
+    @media (max-width: 767px) {
+        .chat-container {
+            background: none;
+            border-radius: 0;
+            box-shadow: none;
+            padding: 0;
+            min-height: auto;
+        }
     }
     .message {
         margin-bottom: 15px;
