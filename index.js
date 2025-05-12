@@ -147,6 +147,11 @@ function renderChatMarkdown(chat) {
         } else {
             name = "";
         }
+        const pattern = /^```markdown\n([\s\S]*)\n```$/;
+        const contentMatch = content.match(pattern);
+        if (contentMatch) {
+            content = contentMatch[1];
+        }
         const parsedContent = marked.parse(protectMathFormulas(content));
         return `<div class="message ${entry.role === 'assistant' ? 'message-assistant' : 'message-user'}">
                     ${name ? `<div class="message-name">${name}</div>` : ""}
