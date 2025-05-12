@@ -219,13 +219,14 @@ function renderMarkdown(md) {
             margin-bottom: 15px;
             display: flex;
             flex-direction: column;
-            max-width: 100%;
+            width: 100%;
+            align-items: flex-start;
         }
         .message-user {
-            align-self: flex-start;
+            align-items: flex-start;
         }
         .message-assistant {
-            align-self: flex-end;
+            align-items: flex-end;
         }
         .message-name {
             font-size: 14px;
@@ -240,6 +241,7 @@ function renderMarkdown(md) {
             font-size: 16px;
             line-height: 1.5;
             word-wrap: break-word;
+            width: fit-content;
             max-width: 80%;
         }
         .message-assistant .message-content {
