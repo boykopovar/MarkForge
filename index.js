@@ -41,21 +41,6 @@ export default {
                 } catch (e) {
                     markdownText = "# Ошибка\nНе удалось получить контент.";
                 }
-
-                // Попробуем распарсить как JSON (если это чат)
-                let chatMessages = [];
-                try {
-                    chatMessages = JSON.parse(markdownText);
-                } catch (e) {
-                    chatMessages = null;
-                }
-
-                if (chatMessages) {
-                    return new Response(renderChat(chatMessages), {
-                        headers: { "Content-Type": "text/html" },
-                    });
-                }
-
                 return new Response(renderMarkdown(markdownText), {
                     headers: { "Content-Type": "text/html" },
                 });
@@ -126,23 +111,61 @@ async function updateFileList(newFileId, env) {
     }
 }
 
-function renderChat(messages) {
-    let html = `<div class="container">`;
-    messages.forEach(message => {
-        if (message.role === "user") {
-            html += `<div class="message user"><strong>Пользователь:</strong> ${renderMarkdown(message.content[0].text)}</div>`;
-        } else if (message.role === "assistant") {
-            html += `<div class="message assistant"><strong>Ассистент:</strong> ${renderMarkdown(message.content[0].text)}</div>`;
-        }
-    });
-    html += `</div>`;
-    return html;
+function protectMathFormulas(text) {
+    return text
+        .replace(/\\\\\(/g, "{{MATH_INLINE_START}}")
+        .replace(/\\\\\)/g, "{{MATH_INLINE_END}}")
+        .replace(/\\\\\[/g, "{{MATH_DISPLAY_START}}")
+        .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
+        .replace(/\$\$/g, "{{MATH_DOLLAR}}")
+        .replace(/\\,/g, "")
+        .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$2}^{$3}");
+}
+
+function restoreMathFormulas(html) {
+    return html
+        .replace(/{{MATH_INLINE_START}}/g, '\\(')
+        .replace(/{{MATH_INLINE_END}}/g, '\\)')
+        .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
+        .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
+        .replace(/{{MATH_DOLLAR}}/g, '$$');
+}
+
+function renderChatMarkdown(chat) {
+    return chat.map(entry => {
+        const role = entry.role === "user" ? "**👤 Пользователь**" : "**🤖 Ассистент**";
+        const content = entry.content
+            .map(part => part.type === "text" ? part.text : "")
+            .join(" ")
+            .trim();
+        return `${role}:
+
+${content}`;
+    }).join("\n\n---\n\n");
 }
 
 function renderMarkdown(md) {
-    const protectedMd = protectMathFormulas(md);
+    let chatData;
+    let isChatJson = false;
+
+    try {
+        chatData = JSON.parse(md);
+        if (Array.isArray(chatData) && chatData.every(entry =>
+            entry.role && typeof entry.role === "string" &&
+            Array.isArray(entry.content) &&
+            entry.content.every(part => part.type === "text" && typeof part.text === "string")
+        )) {
+            isChatJson = true;
+        }
+    } catch (e) {
+        isChatJson = false;
+    }
+
+    const chatMarkdown = isChatJson ? renderChatMarkdown(chatData) : md;
+    const protectedMd = protectMathFormulas(chatMarkdown);
     const parsedHtml = marked.parse(protectedMd);
     const restoredHtml = restoreMathFormulas(parsedHtml);
+
     return `<!DOCTYPE html>
 <html>
 <head>
@@ -173,24 +196,12 @@ function renderMarkdown(md) {
     @media (min-width: 768px) {
         .container { width: 70%; margin: 0 auto; }
     }
-    h1 {
-        font-size: 32px;
-    }
-    h2 {
-        font-size: 28px;
-    }
-    h3 {
-        font-size: 24px;
-    }
-    h4 {
-        font-size: 20px;
-    }
-    h5 {
-        font-size: 18px;
-    }
-    h6 {
-        font-size: 16px;
-    }
+    h1 { font-size: 32px; }
+    h2 { font-size: 28px; }
+    h3 { font-size: 24px; }
+    h4 { font-size: 20px; }
+    h5 { font-size: 18px; }
+    h6 { font-size: 16px; }
     pre {
         position: relative;
         font-family: 'Inter', sans-serif;
@@ -271,14 +282,91 @@ function renderMarkdown(md) {
         border-radius: 4px;
         font-family: 'Inter', sans-serif;
     }
-    .MathJax_Display { font-size: 20px; }
+    .MathJax_Display {
+        overflow-x: auto;
+    }
 </style>
+</head>
+<body>
+    <div class="container">
+        <textarea id="markdown-input" placeholder="Вставьте Markdown здесь..." style="display: none;">${chatMarkdown}</textarea>
+        <div id="content">${restoredHtml}</div>
+    </div>
+    <div class="footer">
+        Developed by <a href="https://github.com/boykopovar/MarkForge" target="_blank">boykopovar</a>
+    </div>
+    <script>
+        function protectMathFormulas(text) {
+            return text
+                .replace(/\\\\\\(/g, "{{MATH_INLINE_START}}")
+                .replace(/\\\\\\)/g, "{{MATH_INLINE_END}}")
+                .replace(/\\\\\\[/g, "{{MATH_DISPLAY_START}}")
+                .replace(/\\\\\\]/g, "{{MATH_DISPLAY_END}}")
+                .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$2}^{$3}");
+        }
 
-</head> <body> <div class="container">${restoredHtml}</div> </body> </html>`; }
-function protectMathFormulas(md) {
-return md.replace(/$$(.?)$$/g, (match, p1) => {{${p1}}}).replace(/$(.?)$/g, (match, p1) => {{${p1}}});
-}
+        function restoreMathFormulas(html) {
+            return html
+                .replace(/{{MATH_INLINE_START}}/g, '\\\\(')
+                .replace(/{{MATH_INLINE_END}}/g, '\\\\)')
+                .replace(/{{MATH_DISPLAY_START}}/g, '\\\\[')
+                .replace(/{{MATH_DISPLAY_END}}/g, '\\\\]');
+        }
 
-function restoreMathFormulas(parsedHtml) {
-return parsedHtml.replace(/{{(.*?)}}/g, (match, p1) => <span class="math">${p1}</span>);
+        function updateContent() {
+            try {
+                const inputText = document.getElementById("markdown-input").value;
+                const protectedText = protectMathFormulas(inputText);
+                const parsedHtml = marked.parse(protectedText);
+                const restoredHtml = restoreMathFormulas(parsedHtml);
+                document.getElementById("content").innerHTML = restoredHtml;
+
+                document.querySelectorAll("pre").forEach(pre => {
+                    const copyBtn = document.createElement("button");
+                    copyBtn.className = "copy-btn";
+                    copyBtn.innerHTML = "📋";
+                    copyBtn.onclick = () => {
+                        try {
+                            navigator.clipboard.writeText(pre.querySelector("code").innerText);
+                            copyBtn.innerHTML = "✅";
+                            setTimeout(() => copyBtn.innerHTML = "📋", 2000);
+                        } catch (e) {
+                            console.error("Не удалось скопировать текст:", e);
+                        }
+                    };
+                    if (!pre.querySelector(".copy-btn")) pre.appendChild(copyBtn);
+                });
+
+                setTimeout(() => {
+                    try {
+                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "content"]);
+                    } catch (e) {
+                        console.error("Не удалось отрендерить MathJax:", e);
+                    }
+                }, 100);
+            } catch (e) {
+                console.error("Ошибка при обновлении контента:", e);
+            }
+        }
+
+        marked.setOptions({
+            highlight: function(code, lang) {
+                try {
+                    return Prism.languages[lang] 
+                        ? Prism.highlight(code, Prism.languages[lang], lang)
+                        : Prism.highlight(code, Prism.languages.javascript, 'javascript');
+                } catch (e) {
+                    return code;
+                }
+            }
+        });
+
+        Prism.plugins.autoloader.languages_path = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/';
+
+        document.getElementById("markdown-input").addEventListener("input", updateContent);
+
+        updateContent();
+    </script>
+</body>
+</html>`;
 }
