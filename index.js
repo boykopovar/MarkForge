@@ -271,4 +271,14 @@ function renderMarkdown(md) {
         border-radius: 4px;
         font-family: 'Inter', sans-serif;
     }
-    .MathJ
+    .MathJax_Display { font-size: 20px; }
+</style>
+
+</head> <body> <div class="container">${restoredHtml}</div> </body> </html>`; }
+function protectMathFormulas(md) {
+return md.replace(/$$(.?)$$/g, (match, p1) => {{${p1}}}).replace(/$(.?)$/g, (match, p1) => {{${p1}}});
+}
+
+function restoreMathFormulas(parsedHtml) {
+return parsedHtml.replace(/{{(.*?)}}/g, (match, p1) => <span class="math">${p1}</span>);
+}
