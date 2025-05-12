@@ -202,7 +202,7 @@ function renderMarkdown(md) {
         }
         .container {
             flex: 1;
-            max-width: 800px;
+            width: 70%;
             margin: 20px auto;
             padding: 0 15px;
             box-sizing: border-box;
@@ -219,7 +219,7 @@ function renderMarkdown(md) {
             margin-bottom: 15px;
             display: flex;
             flex-direction: column;
-            max-width: 70%;
+            max-width: 100%;
         }
         .message-user {
             align-self: flex-start;
@@ -240,6 +240,7 @@ function renderMarkdown(md) {
             font-size: 16px;
             line-height: 1.5;
             word-wrap: break-word;
+            max-width: 80%;
         }
         .message-assistant .message-content {
             background: #00cc88;
