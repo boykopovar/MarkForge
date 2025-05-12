@@ -182,7 +182,7 @@ function renderMarkdown(md) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MarkForge</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>✒️</text></svg>" type="image/svg+xml">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
@@ -190,143 +190,152 @@ function renderMarkdown(md) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #f4f5f7;
-            color: #1a1a1a;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        .container {
-            flex: 1;
-            width: 70%;
-            margin: 20px auto;
-            padding: 0 15px;
-            box-sizing: border-box;
-        }
-        .chat-container {
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            min-height: 400px;
-            overflow-y: auto;
-        }
-        .message {
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            align-items: flex-start;
-        }
-        .message-user {
-            align-items: flex-start;
-        }
-        .message-assistant {
-            align-items: flex-end;
-        }
-        .message-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: #555;
-            margin-bottom: 5px;
-        }
-        .message-content {
-            background: #e9ecef;
-            border-radius: 18px;
-            padding: 10px 15px;
-            font-size: 16px;
-            line-height: 1.5;
-            word-wrap: break-word;
-            width: fit-content;
-            max-width: 80%;
-        }
-        .message-assistant .message-content {
-            background: #00cc88;
-            color: #ffffff;
-        }
-        .message-content p {
-            margin: 0;
-        }
-        h1 { font-size: 28px; margin-bottom: 20px; }
-        h2 { font-size: 24px; }
-        h3 { font-size: 20px; }
-        h4 { font-size: 18px; }
-        h5 { font-size: 16px; }
-        h6 { font-size: 14px; }
-        pre {
-            position: relative;
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            overflow-x: auto;
-            font-size: 14px;
-        }
-        code {
-            background: #f5f5f5;
-            padding: 2px 4px;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        pre code {
-            background: none;
-            padding: 0;
-        }
-        .copy-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #e0e0e0;
-            border: none;
-            border-radius: 4px;
-            padding: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .copy-btn:hover {
-            background: #d0d0d0;
-        }
-        .footer {
-            text-align: center;
-            padding: 20px 0;
-            font-size: 14px;
-            color: #666;
-        }
-        .footer a {
-            color: #0066cc;
-            text-decoration: none;
-        }
-        .footer a:hover {
-            text-decoration: underline;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 16px;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        th {
-            background: #f5f5f5;
-            font-weight: 700;
-        }
-        tr:nth-child(even) {
-            background: #fafafa;
-        }
-        tr:hover {
-            background: #f0f0f0;
-        }
-        .MathJax_Display {
-            overflow-x: auto;
-        }
+    body { margin: 0; padding: 0; background: #ffffff; color: #000000; }
+    .container {
+        font-family: 'Inter', sans-serif;
+        font-size: 20px;
+        line-height: 1.4;
+        word-wrap: break-word;
+        padding: 20px;
+        box-sizing: border-box;
+        width: 70%;
+        min-height: 100vh;
+        margin: 0 auto;
+        text-align: left;
+    }
+    .chat-container {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        min-height: 400px;
+        overflow-y: auto;
+    }
+    .message {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        align-items: flex-start;
+    }
+    .message-user {
+        align-items: flex-start;
+    }
+    .message-assistant {
+        align-items: flex-end;
+    }
+    .message-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #555;
+        margin-bottom: 5px;
+    }
+    .message-content {
+        background: #e9ecef;
+        border-radius: 18px;
+        padding: 10px 15px;
+        font-size: 16px;
+        line-height: 1.5;
+        word-wrap: break-word;
+        width: fit-content;
+        max-width: 80%;
+    }
+    .message-assistant .message-content {
+        background: #00cc88;
+        color: #ffffff;
+    }
+    .message-content p {
+        margin: 0;
+    }
+    h1 { font-size: 32px; }
+    h2 { font-size: 28px; }
+    h3 { font-size: 24px; }
+    h4 { font-size: 20px; }
+    h5 { font-size: 18px; }
+    h6 { font-size: 16px; }
+    pre {
+        position: relative;
+        font-family: 'Inter', sans-serif;
+        font-size: 16px;
+        background: #f5f5f5;
+        padding: 10px 40px 10px 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        overflow-x: auto;
+        white-space: pre;
+        word-wrap: normal;
+    }
+    code {
+        font-family: monospace;
+        font-size: inherit;
+        background: #f5f5f5;
+        padding: 2px 4px;
+        border-radius: 5px;
+    }
+    pre code {
+        font-family: 'Inter', sans-serif;
+        background: #f5f5f5;
+        padding: 0;
+        font-size: 16px;
+    }
+    .token.operator, .token.punctuation {
+        background: transparent;
+        color: #000000;
+    }
+    .copy-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #e0e0e0;
+        border: none;
+        border-radius: 3px;
+        padding: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    .copy-btn:hover { background: #d0d0d0; }
+    .footer {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        font-family: 'Inter', sans-serif;
+        color: #666;
+        text-align: center;
+    }
+    .footer a { color: #0066cc; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+    table {
+        display: block;
+        overflow-x: auto;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-family: 'Inter', sans-serif;
+        font-size: 18px;
+    }
+    th, td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+    th {
+        background: #f5f5f5;
+        font-weight: 700;
+    }
+    tr:nth-child(even) { background: #fafafa; }
+    tr:hover { background: #f0f0f0; }
+    textarea {
+        width: 100%;
+        height: 150px;
+        padding: 10px;
+        font-size: 16px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: 'Inter', sans-serif;
+    }
+    .MathJax_Display {
+        overflow-x: auto;
+    }
     </style>
 </head>
 <body>
