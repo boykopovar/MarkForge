@@ -113,11 +113,11 @@ async function updateFileList(newFileId, env) {
 
 function escapeHtml(unsafe) {
     return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replace(/&/g, "&")
+        .replace(/</g, "<")
+        .replace(/>/g, ">")
+        .replace(/"/g, """)
+        .replace(/'/g, "'");
 }
 
 function renderMarkdown(md) {
@@ -137,7 +137,6 @@ function renderMarkdown(md) {
         isChatJson = false;
     }
 
-    // Экранируем содержимое для безопасной вставки в textarea
     const textareaContent = isChatJson ? escapeHtml(JSON.stringify(chatData)) : escapeHtml(md);
 
     return `<!DOCTYPE html>
@@ -153,9 +152,7 @@ function renderMarkdown(md) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-    <!-- Для перехода на MathJax 3 раскомментируйте следующую строку и закомментируйте предыдущую -->
-    <!-- <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script> -->
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
     <style>
     body { margin: 0; padding: 0; background: #ffffff; color: #000000; }
     .container {
@@ -402,7 +399,7 @@ function renderMarkdown(md) {
                 if (isChatJson) {
                     contentHtml = renderChatMarkdown(chatData);
                 } else {
-                    const protectedText = protectMathFormulas(inputText);
+                    const protectedText | protectMathFormulas(inputText);
                     const parsedHtml = marked.parse(protectedText);
                     contentHtml = restoreMathFormulas(parsedHtml);
                 }
@@ -427,12 +424,11 @@ function renderMarkdown(md) {
 
                 setTimeout(() => {
                     try {
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "content"]);
+                        MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
                     } catch (e) {
                         console.error("Не удалось отрендерить MathJax:", e);
                     }
                 }, 100);
-                
             } catch (e) {
                 console.error("Ошибка при обновлении контента:", e);
             }
@@ -456,4 +452,4 @@ function renderMarkdown(md) {
     </script>
 </body>
 </html>`;
-        }
+}
