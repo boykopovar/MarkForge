@@ -361,7 +361,7 @@ function renderMarkdown(md) {
                 } else {
                     name = "";
                 }
-                const pattern = /^```markdown\n([\s\S]*)\n```$/;
+                const pattern = /^```markdown\\n([\\s\\S]*)\\n```$/;
                 const contentMatch = content.match(pattern);
                 if (contentMatch) {
                     content = contentMatch[1];
