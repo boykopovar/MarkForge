@@ -111,30 +111,80 @@ async function updateFileList(newFileId, env) {
     }
 }
 
+function protectMathFormulas(text) {
+    return text
+        .replace(/\\\\\(/g, "{{MATH_INLINE_START}}")
+        .replace(/\\\\\)/g, "{{MATH_INLINE_END}}")
+        .replace(/\\\\\[/g, "{{MATH_DISPLAY_START}}")
+        .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
+        .replace(/\$\$/g, "{{MATH_DOLLAR}}")
+        .replace(/\\,/g, "")
+        .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$1}^{$2}");
+}
+
+function restoreMathFormulas(html) {
+    return html
+        .replace(/{{MATH_INLINE_START}}/g, '\\(')
+        .replace(/{{MATH_INLINE_END}}/g, '\\)')
+        .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
+        .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
+        .replace(/{{MATH_DOLLAR}}/g, '$$');
+}
+
+function renderChatMarkdown(chat) {
+    return chat.map(entry => {
+        let content = entry.content
+            .map(part => part.type === "text" ? part.text : "")
+            .join(" ")
+            .trim();
+        let name = "Пользователь";
+        if (entry.role === "user") {
+            const match = content.match(/^\('([^']+)'\):/);
+            if (match) {
+                name = match[1];
+                content = content.replace(/^\('[^']+'\):/, "").trim();
+            }
+        } else {
+            name = "";
+        }
+        const pattern = /^```markdown\n([\s\S]*)\n```$/;
+        const contentMatch = content.match(pattern);
+        if (contentMatch) {
+            content = contentMatch[1];
+        }
+        const protectedContent = protectMathFormulas(content);
+        const parsedContent = marked.parse(protectedContent);
+        const restoredContent = restoreMathFormulas(parsedContent);
+        return `<div class="message ${entry.role === 'assistant' ? 'message-assistant' : 'message-user'}">
+                    ${name ? `<div class="message-name">${name}</div>` : ""}
+                    <div class="message-content">${restoredContent}</div>
+                </div>`;
+    }).join("");
+}
+
 function renderMarkdown(md) {
-    let chatData;
+    let content;
     let isChatJson = false;
 
     try {
-        chatData = JSON.parse(md);
+        const chatData = JSON.parse(md);
         if (Array.isArray(chatData) && chatData.every(entry =>
             entry.role && typeof entry.role === "string" &&
             Array.isArray(entry.content) &&
             entry.content.every(part => part.type === "text" && typeof part.text === "string")
         )) {
             isChatJson = true;
+            content = renderChatMarkdown(chatData);
         }
     } catch (e) {
         isChatJson = false;
     }
 
-    // Экранируем содержимое для безопасной вставки в textarea
-    const escapedContent = (isChatJson ? JSON.stringify(chatData) : md)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+    if (!isChatJson) {
+        const protectedMd = protectMathFormulas(md);
+        const parsedHtml = marked.parse(protectedMd);
+        content = restoreMathFormulas(parsedHtml);
+    }
 
     return `<!DOCTYPE html>
 <html>
@@ -149,10 +199,7 @@ function renderMarkdown(md) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-    <!-- Если хочешь перейти на MathJax 3, замени строку выше на:
     <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
-    и обнови вызов MathJax в updateContent, как указано ниже -->
     <style>
     body { margin: 0; padding: 0; background: #ffffff; color: #000000; }
     .container {
@@ -318,8 +365,7 @@ function renderMarkdown(md) {
 </head>
 <body>
     <div class="container">
-        <textarea id="markdown-input" style="display: none;">${escapedContent}</textarea>
-        <div class="chat-container" id="content"></div>
+        <div class="chat-container" id="content">${content}</div>
     </div>
     <div class="footer">
         Developed by <a href="https://github.com/boykopovar/MarkForge" target="_blank">boykopovar</a>
@@ -327,85 +373,23 @@ function renderMarkdown(md) {
     <script>
         function protectMathFormulas(text) {
             return text
-                .replace(/\\\\\(/g, "{{MATH_INLINE_START}}")
-                .replace(/\\\\\)/g, "{{MATH_INLINE_END}}")
-                .replace(/\\\\\[/g, "{{MATH_DISPLAY_START}}")
-                .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
-                .replace(/\$\$/g, "{{MATH_DOLLAR}}")
-                .replace(/\\,/g, "")
+                .replace(/\\\\\\(/g, "{{MATH_INLINE_START}}")
+                .replace(/\\\\\\)/g, "{{MATH_INLINE_END}}")
+                .replace(/\\\\\\[/g, "{{MATH_DISPLAY_START}}")
+                .replace(/\\\\\\]/g, "{{MATH_DISPLAY_END}}")
                 .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$1}^{$2}");
         }
 
         function restoreMathFormulas(html) {
             return html
-                .replace(/{{MATH_INLINE_START}}/g, '\\(')
-                .replace(/{{MATH_INLINE_END}}/g, '\\)')
-                .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
-                .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
-                .replace(/{{MATH_DOLLAR}}/g, '$$');
-        }
-
-        function renderChatMarkdown(chat) {
-            return chat.map(entry => {
-                let content = entry.content
-                    .map(part => part.type === "text" ? part.text : "")
-                    .join(" ")
-                    .trim();
-                let name = "Пользователь";
-                if (entry.role === "user") {
-                    const match = content.match(/^\('([^']+)'\):/);
-                    if (match) {
-                        name = match[1];
-                        content = content.replace(/^\('[^']+'\):/, "").trim();
-                    }
-                } else {
-                    name = "";
-                }
-                const pattern = /^```markdown\n([\s\S]*)\n```$/;
-                const contentMatch = content.match(pattern);
-                if (contentMatch) {
-                    content = contentMatch[1];
-                }
-                const protectedContent = protectMathFormulas(content);
-                const parsedContent = marked.parse(protectedContent);
-                const restoredContent = restoreMathFormulas(parsedContent);
-                return \`<div class="message \${entry.role === 'assistant' ? 'message-assistant' : 'message-user'}">
-                            \${name ? \`<div class="message-name">\${name}</div>\` : ""}
-                            <div class="message-content">\${restoredContent}</div>
-                        </div>\`;
-            }).join("");
+                .replace(/{{MATH_INLINE_START}}/g, '\\\\(')
+                .replace(/{{MATH_INLINE_END}}/g, '\\\\)')
+                .replace(/{{MATH_DISPLAY_START}}/g, '\\\\[')
+                .replace(/{{MATH_DISPLAY_END}}/g, '\\\\]');
         }
 
         function updateContent() {
             try {
-                const inputText = document.getElementById("markdown-input").value;
-                let contentHtml;
-
-                let isChatJson = false;
-                let chatData;
-                try {
-                    chatData = JSON.parse(inputText);
-                    if (Array.isArray(chatData) && chatData.every(entry =>
-                        entry.role && typeof entry.role === "string" &&
-                        Array.isArray(entry.content) &&
-                        entry.content.every(part => part.type === "text" && typeof part.text === "string")
-                    )) {
-                        isChatJson = true;
-                    }
-                } catch (e) {
-                    isChatJson = false;
-                }
-
-                if (isChatJson) {
-                    contentHtml = renderChatMarkdown(chatData);
-                } else {
-                    const protectedText = protectMathFormulas(inputText);
-                    const parsedHtml = marked.parse(protectedText);
-                    contentHtml = restoreMathFormulas(parsedHtml);
-                }
-
-                document.getElementById("content").innerHTML = contentHtml;
-
                 document.querySelectorAll("pre").forEach(pre => {
                     const copyBtn = document.createElement("button");
                     copyBtn.className = "copy-btn";
@@ -422,15 +406,26 @@ function renderMarkdown(md) {
                     if (!pre.querySelector(".copy-btn")) pre.appendChild(copyBtn);
                 });
 
-                setTimeout(() => {
-                    try {
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "content"]);
-                        // Если используешь MathJax 3, замени на:
-                        // MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
-                    } catch (e) {
-                        console.error("Не удалось отрендерить MathJax:", e);
+                window.MathJax = {
+                    tex: {
+                        inlineMath: [['\\(', '\\)']],
+                        displayMath: [['\\[', '\\]']],
+                    },
+                    options: {
+                        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                        ignoreHtmlClass: 'tex2jax_ignore',
                     }
-                }, 100);
+                };
+
+                if (window.MathJax) {
+                    setTimeout(() => {
+                        try {
+                            MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
+                        } catch (e) {
+                            console.error("Не удалось отрендерить MathJax:", e);
+                        }
+                    }, 100);
+                }
             } catch (e) {
                 console.error("Ошибка при обновлении контента:", e);
             }
