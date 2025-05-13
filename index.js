@@ -111,63 +111,16 @@ async function updateFileList(newFileId, env) {
     }
 }
 
-function protectMathFormulas(text) {
-    return text
-        .replace(/\\\\\(/g, "{{MATH_INLINE_START}}")
-        .replace(/\\\\\)/g, "{{MATH_INLINE_END}}")
-        .replace(/\\\\\[/g, "{{MATH_DISPLAY_START}}")
-        .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
-        .replace(/\$\$/g, "{{MATH_DOLLAR}}")
-        .replace(/\\,/g, "")
-        .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$2}^{$3}");
-}
-
-function restoreMathFormulas(html) {
-    return html
-        .replace(/{{MATH_INLINE_START}}/g, '\\(')
-        .replace(/{{MATH_INLINE_END}}/g, '\\)')
-        .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
-        .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
-        .replace(/{{MATH_DOLLAR}}/g, '$$');
-}
-
-function renderChatMarkdown(chat) {
-    return chat.map(entry => {
-        let content = entry.content
-            .map(part => part.type === "text" ? part.text : "")
-            .join(" ")
-            .trim();
-        let name = "Пользователь";
-        if (entry.role === "user") {
-            const match = content.match(/^\('([^']+)':\)/);
-            if (match) {
-                name = match[1];
-                content = content.replace(/^\('[^']+':\)/, "").trim();
-            }
-        } else {
-            name = "";
-        }
-        const pattern = /^```markdown\n([\s\S]*)\n```$/;
-        const contentMatch = content.match(pattern);
-        if (contentMatch) {
-            content = contentMatch[1];
-        }
-        const parsedContent = marked.parse(protectMathFormulas(content));
-        return `<div class="message ${entry.role === 'assistant' ? 'message-assistant' : 'message-user'}">
-                    ${name ? `<div class="message-name">${name}</div>` : ""}
-                    <div class="message-content">${restoreMathFormulas(parsedContent)}</div>
-                </div>`;
-    }).join("");
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 function renderMarkdown(md) {
-    // Убираем обёртку ```markdown ... ``` если она есть
-    const pattern = /^```markdown\n([\s\S]*)\n```$/;
-    const match = md.match(pattern);
-    if (match) {
-        md = match[1];
-    }
-
     let chatData;
     let isChatJson = false;
 
@@ -184,8 +137,8 @@ function renderMarkdown(md) {
         isChatJson = false;
     }
 
-    const content = isChatJson ? renderChatMarkdown(chatData) : marked.parse(protectMathFormulas(md));
-    const restoredHtml = restoreMathFormulas(content);
+    // Экранируем содержимое для безопасной вставки в textarea
+    const textareaContent = isChatJson ? escapeHtml(JSON.stringify(chatData)) : escapeHtml(md);
 
     return `<!DOCTYPE html>
 <html>
@@ -201,6 +154,8 @@ function renderMarkdown(md) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <!-- Для перехода на MathJax 3 раскомментируйте следующую строку и закомментируйте предыдущую -->
+    <!-- <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script> -->
     <style>
     body { margin: 0; padding: 0; background: #ffffff; color: #000000; }
     .container {
@@ -366,7 +321,8 @@ function renderMarkdown(md) {
 </head>
 <body>
     <div class="container">
-        <div class="chat-container" id="content">${restoredHtml}</div>
+        <textarea id="markdown-input" style="display: none;">${textareaContent}</textarea>
+        <div class="chat-container" id="content"></div>
     </div>
     <div class="footer">
         Developed by <a href="https://github.com/boykopovar/MarkForge" target="_blank">boykopovar</a>
@@ -374,23 +330,85 @@ function renderMarkdown(md) {
     <script>
         function protectMathFormulas(text) {
             return text
-                .replace(/\\\\\\(/g, "{{MATH_INLINE_START}}")
-                .replace(/\\\\\\)/g, "{{MATH_INLINE_END}}")
-                .replace(/\\\\\\[/g, "{{MATH_DISPLAY_START}}")
-                .replace(/\\\\\\]/g, "{{MATH_DISPLAY_END}}")
-                .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$2}^{$3}");
+                .replace(/\\\\\(/g, "{{MATH_INLINE_START}}")
+                .replace(/\\\\\)/g, "{{MATH_INLINE_END}}")
+                .replace(/\\\\\[/g, "{{MATH_DISPLAY_START}}")
+                .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
+                .replace(/\$\$/g, "{{MATH_DOLLAR}}")
+                .replace(/\\,/g, "")
+                .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$1}^{$2}");
         }
 
         function restoreMathFormulas(html) {
             return html
-                .replace(/{{MATH_INLINE_START}}/g, '\\\\(')
-                .replace(/{{MATH_INLINE_END}}/g, '\\\\)')
-                .replace(/{{MATH_DISPLAY_START}}/g, '\\\\[')
-                .replace(/{{MATH_DISPLAY_END}}/g, '\\\\]');
+                .replace(/{{MATH_INLINE_START}}/g, '\\(')
+                .replace(/{{MATH_INLINE_END}}/g, '\\)')
+                .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
+                .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
+                .replace(/{{MATH_DOLLAR}}/g, '$$');
+        }
+
+        function renderChatMarkdown(chat) {
+            return chat.map(entry => {
+                let content = entry.content
+                    .map(part => part.type === "text" ? part.text : "")
+                    .join(" ")
+                    .trim();
+                let name = "Пользователь";
+                if (entry.role === "user") {
+                    const match = content.match(/^\('([^']+)'\):/);
+                    if (match) {
+                        name = match[1];
+                        content = content.replace(/^\('[^']+'\):/, "").trim();
+                    }
+                } else {
+                    name = "";
+                }
+                const pattern = /^```markdown\n([\s\S]*)\n```$/;
+                const contentMatch = content.match(pattern);
+                if (contentMatch) {
+                    content = contentMatch[1];
+                }
+                const protectedContent = protectMathFormulas(content);
+                const parsedContent = marked.parse(protectedContent);
+                const restoredContent = restoreMathFormulas(parsedContent);
+                return `<div class="message ${entry.role === 'assistant' ? 'message-assistant' : 'message-user'}">
+                            ${name ? `<div class="message-name">${name}</div>` : ""}
+                            <div class="message-content">${restoredContent}</div>
+                        </div>`;
+            }).join("");
         }
 
         function updateContent() {
             try {
+                const inputText = document.getElementById("markdown-input").value;
+                let contentHtml;
+
+                let isChatJson = false;
+                let chatData;
+                try {
+                    chatData = JSON.parse(inputText);
+                    if (Array.isArray(chatData) && chatData.every(entry =>
+                        entry.role && typeof entry.role === "string" &&
+                        Array.isArray(entry.content) &&
+                        entry.content.every(part => part.type === "text" && typeof part.text === "string")
+                    )) {
+                        isChatJson = true;
+                    }
+                } catch (e) {
+                    isChatJson = false;
+                }
+
+                if (isChatJson) {
+                    contentHtml = renderChatMarkdown(chatData);
+                } else {
+                    const protectedText = protectMathFormulas(inputText);
+                    const parsedHtml = marked.parse(protectedText);
+                    contentHtml = restoreMathFormulas(parsedHtml);
+                }
+
+                document.getElementById("content").innerHTML = contentHtml;
+
                 document.querySelectorAll("pre").forEach(pre => {
                     const copyBtn = document.createElement("button");
                     copyBtn.className = "copy-btn";
@@ -414,6 +432,7 @@ function renderMarkdown(md) {
                         console.error("Не удалось отрендерить MathJax:", e);
                     }
                 }, 100);
+                
             } catch (e) {
                 console.error("Ошибка при обновлении контента:", e);
             }
@@ -437,4 +456,4 @@ function renderMarkdown(md) {
     </script>
 </body>
 </html>`;
-}
+        }
