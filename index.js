@@ -111,15 +111,6 @@ async function updateFileList(newFileId, env) {
     }
 }
 
-function escapeHtml(unsafe) {
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
-
 function renderMarkdown(md) {
     let chatData;
     let isChatJson = false;
@@ -138,7 +129,12 @@ function renderMarkdown(md) {
     }
 
     // Экранируем содержимое для безопасной вставки в textarea
-    const textareaContent = isChatJson ? escapeHtml(JSON.stringify(chatData)) : escapeHtml(md);
+    const escapedContent = (isChatJson ? JSON.stringify(chatData) : md)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 
     return `<!DOCTYPE html>
 <html>
@@ -154,8 +150,9 @@ function renderMarkdown(md) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-    <!-- Для перехода на MathJax 3 раскомментируйте следующую строку и закомментируйте предыдущую -->
-    <!-- <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script> -->
+    <!-- Если хочешь перейти на MathJax 3, замени строку выше на:
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+    и обнови вызов MathJax в updateContent, как указано ниже -->
     <style>
     body { margin: 0; padding: 0; background: #ffffff; color: #000000; }
     .container {
@@ -321,7 +318,7 @@ function renderMarkdown(md) {
 </head>
 <body>
     <div class="container">
-        <textarea id="markdown-input" style="display: none;">${textareaContent}</textarea>
+        <textarea id="markdown-input" style="display: none;">${escapedContent}</textarea>
         <div class="chat-container" id="content"></div>
     </div>
     <div class="footer">
@@ -364,7 +361,7 @@ function renderMarkdown(md) {
                 } else {
                     name = "";
                 }
-                const pattern = /^```markdown\\n([\\s\\S]*)\\n```$/;
+                const pattern = /^```markdown\n([\s\S]*)\n```$/;
                 const contentMatch = content.match(pattern);
                 if (contentMatch) {
                     content = contentMatch[1];
@@ -372,10 +369,10 @@ function renderMarkdown(md) {
                 const protectedContent = protectMathFormulas(content);
                 const parsedContent = marked.parse(protectedContent);
                 const restoredContent = restoreMathFormulas(parsedContent);
-                return `<div class="message ${entry.role === 'assistant' ? 'message-assistant' : 'message-user'}">
-                            ${name ? `<div class="message-name">${name}</div>` : ""}
-                            <div class="message-content">${restoredContent}</div>
-                        </div>`;
+                return \`<div class="message \${entry.role === 'assistant' ? 'message-assistant' : 'message-user'}">
+                            \${name ? \`<div class="message-name">\${name}</div>\` : ""}
+                            <div class="message-content">\${restoredContent}</div>
+                        </div>\`;
             }).join("");
         }
 
@@ -428,20 +425,12 @@ function renderMarkdown(md) {
                 setTimeout(() => {
                     try {
                         MathJax.Hub.Queue(["Typeset", MathJax.Hub, "content"]);
+                        // Если используешь MathJax 3, замени на:
+                        // MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
                     } catch (e) {
                         console.error("Не удалось отрендерить MathJax:", e);
                     }
                 }, 100);
-                // Для MathJax 3 замените вызов MathJax на:
-                /*
-                setTimeout(() => {
-                    try {
-                        MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
-                    } catch (e) {
-                        console.error("Не удалось отрендерить MathJax:", e);
-                    }
-                }, 100);
-                */
             } catch (e) {
                 console.error("Ошибка при обновлении контента:", e);
             }
