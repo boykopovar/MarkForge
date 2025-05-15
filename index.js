@@ -139,15 +139,13 @@ function renderChatMarkdown(chat) {
             .map(part => part.type === "text" ? part.text : "")
             .join(" ")
             .trim();
-        let name = "Пользователь";
+        let name = entry.role === "user" ? "Пользователь" : "";
         if (entry.role === "user") {
-            const match = content.match(/^\s*\('([^']+)'\):/);
+            const match = content.match(/^\s*\('([^']+)'\):(\s*)/);
             if (match) {
                 name = match[1];
-                content = content.replace(/^\s*\('[^']+'\):/, "").trim();
+                content = content.slice(match[0].length);
             }
-        } else {
-            name = "";
         }
         const pattern = /^```markdown\n([\s\S]*)\n```$/;
         const contentMatch = content.match(pattern);
