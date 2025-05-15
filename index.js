@@ -41,7 +41,7 @@ export default {
                 } catch (e) {
                     markdownText = "# Ошибка\nНе удалось получить контент.";
                 }
-                return new Response(renderMarkdown(markdownText), {
+                return new Response(renderMarkdown(markdownText, false), {
                     headers: {
                         "Content-Type": "text/html",
                         "Cache-Control": "no-cache"
@@ -71,8 +71,11 @@ export default {
                 });
             }
 
-            return new Response("Используйте POST-запрос для загрузки Markdown", {
-                headers: { "Content-Type": "text/plain" },
+            return new Response(renderMarkdown("", true), {
+                headers: {
+                    "Content-Type": "text/html",
+                    "Cache-Control": "no-cache"
+                },
             });
         } catch (e) {
             return new Response("Внутренняя ошибка сервера", {
@@ -139,9 +142,14 @@ function renderChatMarkdown(chat) {
             .map(part => part.type === "text" ? part.text : "")
             .join(" ")
             .trim();
-        
         let name = entry.role === "user" ? "Пользователь" : "";
-        
+        if (entry.role === "user") {
+            const match = content.match(/^\s*\('([^']+)'\):\s*/);
+            if (match) {
+                name = match[1];
+                content = content.slice(match[0].length);
+            }
+        }
         const pattern = /^```markdown\n([\s\S]*)\n```$/;
         const contentMatch = content.match(pattern);
         if (contentMatch) {
@@ -157,7 +165,7 @@ function renderChatMarkdown(chat) {
     }).join("");
 }
 
-function renderMarkdown(md) {
+function renderMarkdown(md, showInput) {
     let content;
     let isChatJson = false;
 
@@ -196,7 +204,7 @@ function renderMarkdown(md) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
     <style>
-    body { margin: 0; padding: 0; background: #ffffff; color: #000000; }
+    body { margin: 0; padding: 0; background: #f8fafc; color: #1a202c; }
     .container {
         font-family: 'Inter', sans-serif;
         font-size: 20px;
@@ -217,10 +225,11 @@ function renderMarkdown(md) {
     .chat-container {
         background: #ffffff;
         border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         padding: 20px;
         min-height: 400px;
         overflow-y: auto;
+        margin-top: 20px;
     }
     @media (max-width: 767px) {
         .chat-container {
@@ -247,11 +256,11 @@ function renderMarkdown(md) {
     .message-name {
         font-size: 14px;
         font-weight: 500;
-        color: #555;
+        color: #4a5568;
         margin-bottom: 5px;
     }
     .message-content {
-        background: #e9ecef;
+        background: #edf2f7;
         border-radius: 18px;
         padding: 10px 15px;
         font-size: 16px;
@@ -346,12 +355,25 @@ function renderMarkdown(md) {
     textarea {
         width: 100%;
         height: 150px;
-        padding: 10px;
+        padding: 15px;
         font-size: 16px;
         margin-bottom: 20px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
         font-family: 'Inter', sans-serif;
+        background: #ffffff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        resize: vertical;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    textarea:focus {
+        border-color: #00cc88;
+        box-shadow: 0 0 0 3px rgba(0, 204, 136, 0.2);
+    }
+    textarea::placeholder {
+        color: #a0aec0;
+        font-style: italic;
     }
     .MathJax_Display {
         overflow-x: auto;
@@ -360,12 +382,61 @@ function renderMarkdown(md) {
 </head>
 <body>
     <div class="container">
+        ${showInput ? `
+        <textarea id="markdown-input" placeholder="Введите Markdown / LaTeX"></textarea>
+        ` : ""}
         <div class="chat-container" id="content">${content}</div>
     </div>
     <div class="footer">
         Developed by <a href="https://github.com/boykopovar/MarkForge" target="_blank">boykopovar</a>
     </div>
     <script>
+        function protectMathFormulas(text) {
+            return text
+                .replace(/\\\(/g, "{{MATH_INLINE_START}}")
+                .replace(/\\\)/g, "{{MATH_INLINE_END}}")
+                .replace(/\\\[/g, "{{MATH_DISPLAY_START}}")
+                .replace(/\\\]/g, "{{MATH_DISPLAY_END}}")
+                .replace(/\$\$/g, "{{MATH_DOLLAR}}")
+                .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$1}^{$2}");
+        }
+
+        function restoreMathFormulas(html) {
+            return html
+                .replace(/{{MATH_INLINE_START}}/g, '\\(')
+                .replace(/{{MATH_INLINE_END}}/g, '\\)')
+                .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
+                .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
+                .replace(/{{MATH_DOLLAR}}/g, '$$');
+        }
+
+        function renderContent(md) {
+            let content;
+            let isChatJson = false;
+            try {
+                const chatData = JSON.parse(md);
+                if (Array.isArray(chatData) && chatData.every(entry =>
+                    entry.role && typeof entry.role === "string" &&
+                    Array.isArray(entry.content) &&
+                    entry.content.every(part => part.type === "text" && typeof part.text === "string")
+                )) {
+                    isChatJson = true;
+                    content = ${renderChatMarkdown.toString().replace(/function renderChatMarkdown/, "function")}(chatData);
+                }
+            } catch (e) {
+                isChatJson = false;
+            }
+            if (!isChatJson) {
+                const protectedMd = protectMathFormulas(md);
+                const parsedHtml = marked.parse(protectedMd);
+                content = restoreMathFormulas(parsedHtml);
+            }
+            document.getElementById("content").innerHTML = content;
+            if (window.MathJax) {
+                MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
+            }
+        }
+
         function updateContent() {
             try {
                 document.querySelectorAll("pre").forEach(pre => {
@@ -395,12 +466,8 @@ function renderMarkdown(md) {
                     }
                 };
 
-                if (window.MathJax) {
-                    try {
-                        MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
-                    } catch (e) {
-                        console.error("Не удалось отрендерить MathJax:", e);
-                    }
+                if (window.MathJax && document.getElementById("content").innerHTML) {
+                    MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
                 }
             } catch (e) {
                 console.error("Ошибка при обновлении контента:", e);
@@ -423,6 +490,16 @@ function renderMarkdown(md) {
 
         document.getElementById("MathJax-script").addEventListener("load", () => {
             updateContent();
+            const input = document.getElementById("markdown-input");
+            if (input) {
+                let timeout;
+                input.addEventListener("input", () => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        renderContent(input.value);
+                    }, 1000);
+                });
+            }
         });
     </script>
 </body>
