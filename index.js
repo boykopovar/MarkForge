@@ -442,7 +442,7 @@ function renderMarkdown(md) {
                         content = content.slice(match[0].length);
                     }
                 }
-                const pattern = /^```markdown\n([\s\S]*)\n```$/;
+                const pattern = /^```markdown\\n([\\s\\S]*)\\n```$/;
                 const contentMatch = content.match(pattern);
                 if (contentMatch) {
                     content = contentMatch[1];
@@ -784,7 +784,7 @@ function renderHomePage() {
                         content = content.slice(match[0].length);
                     }
                 }
-                const pattern = /^```markdown\n([\s\S]*)\n```$/;
+                const pattern = /^```markdown\\n([\\s\\S]*)\\n```$/;
                 const contentMatch = content.match(pattern);
                 if (contentMatch) {
                     content = contentMatch[1];
