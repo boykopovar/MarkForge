@@ -119,7 +119,7 @@ function protectMathFormulas(text) {
         .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
         .replace(/\$\$/g, "{{MATH_DOLLAR}}")
         .replace(/\\left/g, "{{MATH_LEFT}}")
-        .replace(/\\right/g, "{{MATH_RIGHT}}");
+        .replace(/\\right/g, "{{MATH_RIGHT}}")
         .replace(/\\,/g, "")
         .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$1}^{$2}");
 }
@@ -130,7 +130,7 @@ function restoreMathFormulas(html) {
         .replace(/{{MATH_INLINE_END}}/g, '\\)')
         .replace(/{{MATH_DISPLAY_START}}/g, '\\[')
         .replace(/{{MATH_DISPLAY_END}}/g, '\\]')
-        .replace(/{{MATH_DOLLAR}}/g, '$$');
+        .replace(/{{MATH_DOLLAR}}/g, '$$')
         .replace(/{{MATH_LEFT}}/g, "\\left")
         .replace(/{{MATH_RIGHT}}/g, "\\right");
 }
