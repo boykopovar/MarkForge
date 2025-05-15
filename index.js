@@ -32,65 +32,16 @@ export default {
                 });
             }
 
-            if (request.method === "GET") {
-                let pathParts = pathname.split("/").filter(part => part);
-                
-                if (pathParts[0] === "view") {
-                    const pageId = pathParts[pathParts.length - 1];
-                    let markdownText;
-                    try {
-                        markdownText = await env.KV.get(pageId) || "# Ошибка\nКонтент не найден.";
-                    } catch (e) {
-                        markdownText = "# Ошибка\nНе удалось получить контент.";
-                    }
-                    return new Response(renderMarkdown(markdownText), {
-                        headers: {
-                            "Content-Type": "text/html",
-                            "Cache-Control": "no-cache"
-                        },
-                    });
+            let pathParts = pathname.split("/");
+            if (pathParts.includes("view")) {
+                const pageId = pathParts[pathParts.length - 1];
+                let markdownText;
+                try {
+                    markdownText = await env.KV.get(pageId) || "# Ошибка\nКонтент не найден.";
+                } catch (e) {
+                    markdownText = "# Ошибка\nНе удалось получить контент.";
                 }
-
-                if (pathParts[0] === "raw") {
-                    const pageId = pathParts[pathParts.length - 1];
-                    let markdownText;
-                    try {
-                        markdownText = await env.KV.get(pageId);
-                        if (markdownText === null) {
-                            return new Response("# Ошибка\nКонтент не найден.", {
-                                status: 404,
-                                headers: { "Content-Type": "text/plain; charset=utf-8" },
-                            });
-                        }
-                    } catch (e) {
-                        return new Response("# Ошибка\nНе удалось получить контент.", {
-                            status: 500,
-                            headers: { "Content-Type": "text/plain; charset=utf-8" },
-                        });
-                    }
-                    return new Response(markdownText, {
-                        headers: { "Content-Type": "text/plain; charset=utf-8" },
-                    });
-                }
-
-                const text = decodeURIComponent(pathname.slice(1));
-                if (!text) {
-                    const welcomeMessage = `# Добро пожаловать! ✒️\n\nПохоже, вы не передали текст в URL. 😕 Чтобы отобразить Markdown, просто добавьте его в адресную строку после слэша, например:\n\n\`\`\`\nhttps://your-site.com/Привет,%20**мир**!\n\`\`\`\n\nMarkForge рендерит Markdown с поддержкой LaTeX и чат-формата. Хотите узнать больше? Читайте о проекте на GitHub:\n\n[MarkForge by boykopovar](https://github.com/boykopovar/MarkForge/)`;
-                    const processedText = protectMathFormulas(welcomeMessage);
-                    const parsedHtml = marked.parse(processedText);
-                    const restoredContent = restoreMathFormulas(parsedHtml);
-                    return new Response(renderMarkdown(restoredContent), {
-                        headers: {
-                            "Content-Type": "text/html",
-                            "Cache-Control": "no-cache"
-                        },
-                    });
-                }
-
-                const processedText = protectMathFormulas(text);
-                const parsedHtml = marked.parse(processedText);
-                const restoredContent = restoreMathFormulas(parsedHtml);
-                return new Response(renderMarkdown(restoredContent), {
+                return new Response(renderMarkdown(markdownText), {
                     headers: {
                         "Content-Type": "text/html",
                         "Cache-Control": "no-cache"
@@ -98,7 +49,29 @@ export default {
                 });
             }
 
-            return new Response("Используйте POST или GET запрос для загрузки Markdown", {
+            if (pathParts[1] === "raw") {
+                const pageId = pathParts[pathParts.length - 1];
+                let markdownText;
+                try {
+                    markdownText = await env.KV.get(pageId);
+                    if (markdownText === null) {
+                        return new Response("# Ошибка\nКонтент не найден.", {
+                            status: 404,
+                            headers: { "Content-Type": "text/plain; charset=utf-8" },
+                        });
+                    }
+                } catch (e) {
+                    return new Response("# Ошибка\nНе удалось получить контент.", {
+                        status: 500,
+                        headers: { "Content-Type": "text/plain; charset=utf-8" },
+                    });
+                }
+                return new Response(markdownText, {
+                    headers: { "Content-Type": "text/plain; charset=utf-8" },
+                });
+            }
+
+            return new Response("Используйте POST-запрос для загрузки Markdown", {
                 headers: { "Content-Type": "text/plain" },
             });
         } catch (e) {
@@ -166,14 +139,9 @@ function renderChatMarkdown(chat) {
             .map(part => part.type === "text" ? part.text : "")
             .join(" ")
             .trim();
+        
         let name = entry.role === "user" ? "Пользователь" : "";
-        if (entry.role === "user") {
-            const match = content.match(/^\s*\('([^']+)'\):\s*/);
-            if (match) {
-                name = match[1];
-                content = content.slice(match[0].length);
-            }
-        }
+        
         const pattern = /^```markdown\n([\s\S]*)\n```$/;
         const contentMatch = content.match(pattern);
         if (contentMatch) {
@@ -208,7 +176,9 @@ function renderMarkdown(md) {
     }
 
     if (!isChatJson) {
-        content = md;
+        const protectedMd = protectMathFormulas(md);
+        const parsedHtml = marked.parse(protectedMd);
+        content = restoreMathFormulas(parsedHtml);
     }
 
     return `<!DOCTYPE html>
