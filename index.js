@@ -140,9 +140,9 @@ function renderChatMarkdown(chat) {
             .join(" ")
             .trim();
         
-        let name = entry.role === "user" ? "Пользователь" : "";
+        let name = entry.role === "user" ? "Пользовафывтель" : "";
         if (entry.role === "user") {
-            const match = content.match(/^\s*\('([^']+)'\):\s*/);
+            const match = content.match(\('([^']+)'\):\s*/);
             if (match) {
                 name = match[1];
                 content = content.slice(match[0].length);
