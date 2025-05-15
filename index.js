@@ -75,8 +75,11 @@ export default {
 
                 const text = decodeURIComponent(pathParts.join("/"));
                 if (!text) {
-                    const welcomeMessage = `# Добро пожаловать! ✒️\n\nПохоже, вы не передали текст в URL. 😕 Чтобы отобразить Markdown, просто добавьте его в адресную строку после слэша, например:\n\n\`\`\`\nhttps://your-site.com/Привет,%20**мир**!\n\`\`\`\n\nMarkForge рендерит Markdown с поддержкой LaTeX и чат-формата. Хотите узнать больше? Читайте о проекте на GitHub:\n\n[MarkForge by boykopovar](https://github.com/boykopovar/MarkForge/)`;
-                    return new Response(renderMarkdown(welcomeMessage), {
+                    const welcomeMessage = `# Добро пожаловать! ✒️\n\nПохоже, вы не передали текст в URL. 😕 Чтобы отобразить Markdown, просто добавьте его в адресную строку после слэша\n\nMarkForge рендерит Markdown с поддержкой LaTeX и чат-формата. Хотите узнать больше? Читайте о проекте на GitHub:\n\n[MarkForge by boykopovar](https://github.com/boykopovar/MarkForge/)`;
+                    const processedText = protectMathFormulas(welcomeMessage);
+                    const parsedHtml = marked.parse(processedText);
+                    const restoredContent = restoreMathFormulas(parsedHtml);
+                    return new Response(renderMarkdown(restoredContent), {
                         headers: {
                             "Content-Type": "text/html",
                             "Cache-Control": "no-cache"
