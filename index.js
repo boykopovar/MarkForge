@@ -140,14 +140,23 @@ function renderChatMarkdown(chat) {
             .join(" ")
             .trim();
         
-        let name = entry.role === "user" ? "Пользователь123" : "";
-        if (entry.role === "user") {
-            const match = content.match(/^\s*\('([^']+)'\):/);
-            if (match) {
-                name = match[1];
-                content = content.slice(match[0].length).trim();
-            }
+        let name = entry.role === "user" ? "Пользователь3" : "";
+    if (entry.role === "user") {
+        const log = document.createElement("div");
+        log.style.cssText = "position:fixed;top:10px;left:10px;background:#fff;border:1px solid #000;padding:10px;font-size:12px;max-height:200px;overflow-y:auto;";
+        document.body.appendChild(log);
+        log.innerHTML += `Input content: ${content}<br>`;
+        const match = content.match(/^\s*\('([^']+)'\):/);
+        log.innerHTML += `Regex match: ${JSON.stringify(match)}<br>`;
+        if (match) {
+            log.innerHTML += `Extracted name: ${match[1]}<br>`;
+            name = match[1];
+            content = content.slice(match[0].length).trim();
+            log.innerHTML += `Sliced content: ${content}<br>`;
+        } else {
+            log.innerHTML += `No match found<br>`;
         }
+    }
         
         const pattern = /^```markdown\n([\s\S]*)\n```$/;
         const contentMatch = content.match(pattern);
