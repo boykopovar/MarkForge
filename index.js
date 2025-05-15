@@ -113,12 +113,11 @@ async function updateFileList(newFileId, env) {
 
 function protectMathFormulas(text) {
     return text
-        .replace(/\\\\\(/g, "{{MATH_INLINE_START}}")
-        .replace(/\\\\\)/g, "{{MATH_INLINE_END}}")
-        .replace(/\\\\\[/g, "{{MATH_DISPLAY_START}}")
-        .replace(/\\\\\]/g, "{{MATH_DISPLAY_END}}")
+        .replace(/\\\(/g, "{{MATH_INLINE_START}}")
+        .replace(/\\\)/g, "{{MATH_INLINE_END}}")
+        .replace(/\\\[/g, "{{MATH_DISPLAY_START}}")
+        .replace(/\\\]/g, "{{MATH_DISPLAY_END}}")
         .replace(/\$\$/g, "{{MATH_DOLLAR}}")
-        .replace(/\\,/g, "")
         .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$1}^{$2}");
 }
 
