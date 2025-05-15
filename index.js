@@ -139,14 +139,27 @@ function renderChatMarkdown(chat) {
             .map(part => part.type === "text" ? part.text : "")
             .join(" ")
             .trim();
+        
         let name = entry.role === "user" ? "Пользователь" : "";
         if (entry.role === "user") {
+            console.log(`Processing user message: ${content}`);
             const match = content.match(/^\s*\('([^']+)'\):(\s*)/);
             if (match) {
                 name = match[1];
+                console.log(`Extracted name: ${name}`);
+                console.log(`Matched full pattern: ${match[0]}`);
+                console.log(`Content before slicing: ${content}`);
                 content = content.slice(match[0].length);
+                console.log(`Content after slicing: ${content}`);
+            } else {
+                console.log(`No name pattern found in: ${content}`);
             }
+        } else {
+            console.log(`Assistant message, no name processing: ${content}`);
         }
+        console.log(`Final name for message: ${name}`);
+        console.log(`Final content for rendering: ${content}`);
+        
         const pattern = /^```markdown\n([\s\S]*)\n```$/;
         const contentMatch = content.match(pattern);
         if (contentMatch) {
