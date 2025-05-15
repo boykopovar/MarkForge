@@ -96,7 +96,7 @@ export default {
                         "Cache-Control": "no-cache"
                     },
                 });
-            }
+            
 
                 const processedText = protectMathFormulas(text);
                 const parsedHtml = marked.parse(processedText);
