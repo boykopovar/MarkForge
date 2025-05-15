@@ -15,6 +15,7 @@ export default {
                 } catch (e) {
                     markdownText = "# Ошибка\nНе удалось прочитать тело запроса.";
                 }
+                
                 const pageId = generateId();
 
                 try {
