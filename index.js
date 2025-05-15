@@ -6,7 +6,7 @@ export default {
     async fetch(request, env) {
         try {
             const url = new URL(request.url);
-            const { pathname, searchParams } = url;
+            const { pathname } = url;
 
             if (request.method === "POST") {
                 let markdownText;
@@ -19,7 +19,7 @@ export default {
 
                 try {
                     await env.KV.put(pageId, markdownText);
-                    await updateFileList(pageId runs, env);
+                    await updateFileList(pageId, env);
                 } catch (e) {
                     return new Response("Ошибка при сохранении контента", {
                         status: 500,
@@ -32,20 +32,62 @@ export default {
                 });
             }
 
-            let pathParts = pathname.split("/");
-            if (pathParts.includes("view")) {
-                const pageId = pathParts[pathParts.length - 1];
-                let markdownText;
-                if (request.method === "GET" && searchParams.has("text")) {
-                    markdownText = decodeURIComponent(searchParams.get("text"));
-                } else {
+            if (request.method === "GET") {
+                let pathParts = pathname.split("/").filter(part => part);
+                
+                if (pathParts[0] === "view") {
+                    const pageId = pathParts[pathParts.length - 1];
+                    let markdownText;
                     try {
                         markdownText = await env.KV.get(pageId) || "# Ошибка\nКонтент не найден.";
                     } catch (e) {
                         markdownText = "# Ошибка\nНе удалось получить контент.";
                     }
+                    return new Response(renderMarkdown(markdownText), {
+                        headers: {
+                            "Content-Type": "text/html",
+                            "Cache-Control": "no-cache"
+                        },
+                    });
                 }
-                return new Response(renderMarkdown(markdownText), {
+
+                if (pathParts[0] === "raw") {
+                    const pageId = pathParts[pathParts.length - 1];
+                    let markdownText;
+                    try {
+                        markdownText = await env.KV.get(pageId);
+                        if (markdownText === null) {
+                            return new Response("# Ошибка\nКонтент не найден.", {
+                                status: 404,
+                                headers: { "Content-Type": "text/plain; charset=utf-8" },
+                            });
+                        }
+                    } catch (e) {
+                        return new Response("# Ошибка\nНе удалось получить контент.", {
+                            status: 500,
+                            headers: { "Content-Type": "text/plain; charset=utf-8" },
+                        });
+                    }
+                    return new Response(markdownText, {
+                        headers: { "Content-Type": "text/plain; charset=utf-8" },
+                    });
+                }
+
+                const text = decodeURIComponent(pathParts.join("/"));
+                if (!text) {
+                    const welcomeMessage = `# Добро пожаловать! ✒️\n\nПохоже, вы не передали текст в URL. 😕 Чтобы отобразить Markdown, просто добавьте его в адресную строку после слэша, например:\n\n\`\`\`\nhttps://your-site.com/Привет,%20**мир**!\n\`\`\`\n\nMarkForge рендерит Markdown с поддержкой LaTeX и чат-формата. Хотите узнать больше? Читайте о проекте на GitHub:\n\n[MarkForge by boykopovar](https://github.com/boykopovar/MarkForge/)`;
+                    return new Response(renderMarkdown(welcomeMessage), {
+                        headers: {
+                            "Content-Type": "text/html",
+                            "Cache-Control": "no-cache"
+                        },
+                    });
+                }
+
+                const processedText = protectMathFormulas(text);
+                const parsedHtml = marked.parse(processedText);
+                const restoredContent = restoreMathFormulas(parsedHtml);
+                return new Response(renderMarkdown(restoredContent), {
                     headers: {
                         "Content-Type": "text/html",
                         "Cache-Control": "no-cache"
@@ -53,29 +95,7 @@ export default {
                 });
             }
 
-            if (pathParts[1] === "raw") {
-                const pageId = pathParts[pathParts.length - 1];
-                let markdownText;
-                try {
-                    markdownText = await env.KV.get(pageId);
-                    if (markdownText === null) {
-                        return new Response("# Ошибка\nКонтент не найден.", {
-                            status: 404,
-                            headers: { "Content-Type": "text/plain; charset=utf-8" },
-                        });
-                    }
-                } catch (e) {
-                    return new Response("# Ошибка\nНе удалось получить контент.", {
-                        status: 500,
-                        headers: { "Content-Type": "text/plain; charset=utf-8" },
-                    });
-                }
-                return new Response(markdownText, {
-                    headers: { "Content-Type": "text/plain; charset=utf-8" },
-                });
-            }
-
-            return new Response("Используйте POST-запрос для загрузки Markdown или GET с параметром text для просмотра", {
+            return new Response("Используйте POST или GET запрос для загрузки Markdown", {
                 headers: { "Content-Type": "text/plain" },
             });
         } catch (e) {
@@ -145,10 +165,10 @@ function renderChatMarkdown(chat) {
             .trim();
         let name = entry.role === "user" ? "Пользователь" : "";
         if (entry.role === "user") {
-            const match = content.match(/^\s*\('([^']+)'\):/);
+            const match = content.match(/^\s*\('([^']+)'\):\s*/);
             if (match) {
                 name = match[1];
-                content = content.slice(match[0].length).trim();
+                content = content.slice(match[0].length);
             }
         }
         const pattern = /^```markdown\n([\s\S]*)\n```$/;
@@ -185,9 +205,7 @@ function renderMarkdown(md) {
     }
 
     if (!isChatJson) {
-        const protectedMd = protectMathFormulas(md);
-        const parsedHtml = marked.parse(protectedMd);
-        content = restoreMathFormulas(parsedHtml);
+        content = md;
     }
 
     return `<!DOCTYPE html>
