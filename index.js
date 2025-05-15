@@ -353,15 +353,17 @@ function renderMarkdown(md) {
     tr:hover { background: #f0f0f0; }
     textarea {
         width: 100%;
-        height: 120px;
+        height: 150px;
         padding: 15px;
         font-size: 16px;
-        border: 1px solid #ddd;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
         border-radius: 12px;
         font-family: 'Inter', sans-serif;
-        resize: none;
+        background: #ffffff;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        transition: border-color 0.3s, box-shadow 0.3s;
+        resize: none;
+        box-sizing: border-box;
     }
     textarea:focus {
         outline: none;
@@ -370,22 +372,24 @@ function renderMarkdown(md) {
     }
     .render-btn {
         display: block;
-        margin: 10px auto;
-        padding: 10px 20px;
+        width: 100%;
+        padding: 12px;
         font-size: 16px;
-        font-family: 'Inter', sans-serif;
-        color: #fff;
+        font-weight: 700;
+        color: #ffffff;
         background: #00cc88;
         border: none;
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
-        transition: background 0.3s;
+        font-family: 'Inter', sans-serif;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
     .render-btn:hover {
         background: #00b377;
     }
     .input-container {
-        margin-bottom: 15px;
+        margin-bottom: 20px;
     }
     .MathJax_Display {
         overflow-x: auto;
@@ -396,9 +400,9 @@ function renderMarkdown(md) {
     <div class="container">
         <div class="input-container">
             <textarea id="markdown-input" placeholder="Введите Markdown / LaTeX"></textarea>
-            <button class="render-btn" onclick="renderInput()">Рендер</button>
+            <button class="render-btn" onclick="renderContent()">Рендер</button>
         </div>
-        <div class="chat-container" id="content"></div>
+        <div class="chat-container" id="content">${content}</div>
     </div>
     <div class="footer">
         Developed by <a href="https://github.com/boykopovar/MarkForge" target="_blank">boykopovar</a>
@@ -452,7 +456,7 @@ function renderMarkdown(md) {
             }).join("");
         }
 
-        function renderInput() {
+        function renderContent() {
             const input = document.getElementById("markdown-input").value;
             let content;
             let isChatJson = false;
@@ -478,58 +482,41 @@ function renderMarkdown(md) {
             }
 
             document.getElementById("content").innerHTML = content;
-
             if (window.MathJax) {
-                try {
-                    MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
-                } catch (e) {
-                    console.error("Не удалось отрендерить MathJax:", e);
-                }
+                MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
             }
         }
 
         function updateContent() {
-            try {
-                document.querySelectorAll("pre").forEach(pre => {
-                    const copyBtn = document.createElement("button");
-                    copyBtn.className = "copy-btn";
-                    copyBtn.innerHTML = "📋";
-                    copyBtn.onclick = () => {
-                        try {
-                            navigator.clipboard.writeText(pre.querySelector("code").innerText);
-                            copyBtn.innerHTML = "✅";
-                            setTimeout(() => copyBtn.innerHTML = "📋", 2000);
-                        } catch (e) {
-                            console.error("Не удалось скопировать текст:", e);
-                        }
-                    };
-                    if (!pre.querySelector(".copy-btn")) pre.appendChild(copyBtn);
-                });
-
-                window.MathJax = {
-                    tex: {
-                        inlineMath: [['\\(', '\\)']],
-                        displayMath: [['\\[', '\\]']],
-                    },
-                    options: {
-                        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-                        ignoreHtmlClass: 'tex2jax_ignore',
-                    }
+            document.querySelectorAll("pre").forEach(pre => {
+                const copyBtn = document.createElement("button");
+                copyBtn.className = "copy-btn";
+                copyBtn.innerHTML = "📋";
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(pre.querySelector("code").innerText);
+                    copyBtn.innerHTML = "✅";
+                    setTimeout(() => copyBtn.innerHTML = "📋", 2000);
                 };
-            } catch (e) {
-                console.error("Ошибка при обновлении контента:", e);
-            }
+                if (!pre.querySelector(".copy-btn")) pre.appendChild(copyBtn);
+            });
+
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['\\(', '\\)']],
+                    displayMath: [['\\[', '\\]']],
+                },
+                options: {
+                    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                    ignoreHtmlClass: 'tex2jax_ignore',
+                }
+            };
         }
 
         marked.setOptions({
             highlight: function(code, lang) {
-                try {
-                    return Prism.languages[lang] 
-                        ? Prism.highlight(code, Prism.languages[lang], lang)
-                        : Prism.highlight(code, Prism.languages.javascript, 'javascript');
-                } catch (e) {
-                    return code;
-                }
+                return Prism.languages[lang] 
+                    ? Prism.highlight(code, Prism.languages[lang], lang)
+                    : Prism.highlight(code, Prism.languages.javascript, 'javascript');
             }
         });
 
@@ -623,7 +610,7 @@ function renderHomePage() {
         width: fit-content;
         max-width: 80%;
     }
-    .message-assistant .message-content {
+    .message-assistant .ischenie-content {
         background: #00cc88;
         color: #ffffff;
     }
@@ -708,15 +695,17 @@ function renderHomePage() {
     tr:hover { background: #f0f0f0; }
     textarea {
         width: 100%;
-        height: 120px;
+        height: 150px;
         padding: 15px;
         font-size: 16px;
-        border: 1px solid #ddd;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
         border-radius: 12px;
         font-family: 'Inter', sans-serif;
-        resize: none;
+        background: #ffffff;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        transition: border-color 0.3s, box-shadow 0.3s;
+        resize: none;
+        box-sizing: border-box;
     }
     textarea:focus {
         outline: none;
@@ -725,22 +714,24 @@ function renderHomePage() {
     }
     .render-btn {
         display: block;
-        margin: 10px auto;
-        padding: 10px 20px;
+        width: 100%;
+        padding: 12px;
         font-size: 16px;
-        font-family: 'Inter', sans-serif;
-        color: #fff;
+        font-weight: 700;
+        color: #ffffff;
         background: #00cc88;
         border: none;
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
-        transition: background 0.3s;
+        font-family: 'Inter', sans-serif;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
     .render-btn:hover {
         background: #00b377;
     }
     .input-container {
-        margin-bottom: 15px;
+        margin-bottom: 20px;
     }
     .MathJax_Display {
         overflow-x: auto;
@@ -751,7 +742,7 @@ function renderHomePage() {
     <div class="container">
         <div class="input-container">
             <textarea id="markdown-input" placeholder="Введите Markdown / LaTeX"></textarea>
-            <button class="render-btn" onclick="renderInput()">Рендер</button>
+            <button class="render-btn" onclick="renderContent()">Рендер</button>
         </div>
         <div class="chat-container" id="content"></div>
     </div>
@@ -807,7 +798,7 @@ function renderHomePage() {
             }).join("");
         }
 
-        function renderInput() {
+        function renderContent() {
             const input = document.getElementById("markdown-input").value;
             let content;
             let isChatJson = false;
@@ -833,58 +824,41 @@ function renderHomePage() {
             }
 
             document.getElementById("content").innerHTML = content;
-
             if (window.MathJax) {
-                try {
-                    MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
-                } catch (e) {
-                    console.error("Не удалось отрендерить MathJax:", e);
-                }
+                MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
             }
         }
 
         function updateContent() {
-            try {
-                document.querySelectorAll("pre").forEach(pre => {
-                    const copyBtn = document.createElement("button");
-                    copyBtn.className = "copy-btn";
-                    copyBtn.innerHTML = "📋";
-                    copyBtn.onclick = () => {
-                        try {
-                            navigator.clipboard.writeText(pre.querySelector("code").innerText);
-                            copyBtn.innerHTML = "✅";
-                            setTimeout(() => copyBtn.innerHTML = "📋", 2000);
-                        } catch (e) {
-                            console.error("Не удалось скопировать текст:", e);
-                        }
-                    };
-                    if (!pre.querySelector(".copy-btn")) pre.appendChild(copyBtn);
-                });
-
-                window.MathJax = {
-                    tex: {
-                        inlineMath: [['\\(', '\\)']],
-                        displayMath: [['\\[', '\\]']],
-                    },
-                    options: {
-                        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-                        ignoreHtmlClass: 'tex2jax_ignore',
-                    }
+            document.querySelectorAll("pre").forEach(pre => {
+                const copyBtn = document.createElement("button");
+                copyBtn.className = "copy-btn";
+                copyBtn.innerHTML = "📋";
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(pre.querySelector("code").innerText);
+                    copyBtn.innerHTML = "✅";
+                    setTimeout(() => copyBtn.innerHTML = "📋", 2000);
                 };
-            } catch (e) {
-                console.error("Ошибка при обновлении контента:", e);
-            }
+                if (!pre.querySelector(".copy-btn")) pre.appendChild(copyBtn);
+            });
+
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['\\(', '\\)']],
+                    displayMath: [['\\[', '\\]']],
+                },
+                options: {
+ Siemens skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                    ignoreHtmlClass: 'tex2jax_ignore',
+                }
+            };
         }
 
         marked.setOptions({
             highlight: function(code, lang) {
-                try {
-                    return Prism.languages[lang] 
-                        ? Prism.highlight(code, Prism.languages[lang], lang)
-                        : Prism.highlight(code, Prism.languages.javascript, 'javascript');
-                } catch (e) {
-                    return code;
-                }
+                return Prism.languages[lang] 
+                    ? Prism.highlight(code, Prism.languages[lang], lang)
+                    : Prism.highlight(code, Prism.languages.javascript, 'javascript');
             }
         });
 
