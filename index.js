@@ -42,7 +42,10 @@ export default {
                     markdownText = "# Ошибка\nНе удалось получить контент.";
                 }
                 return new Response(renderMarkdown(markdownText), {
-                    headers: { "Content-Type": "text/html" },
+                    headers: {
+                        "Content-Type": "text/html",
+                        "Cache-Control": "no-cache"
+                    },
                 });
             }
 
@@ -137,13 +140,13 @@ function renderChatMarkdown(chat) {
             .join(" ")
             .trim();
         let name = "Пользователь";
-if (entry.role === "user") {
-    const match = content.match(/^\s*\('([^']+)'\):/);
-    if (match) {
-        name = match[1];
-        content = content.replace(/^\s*\('[^']+'\):/, "").trim();
-    }
-} else {
+        if (entry.role === "user") {
+            const match = content.match(/^\s*\('([^']+)'\):/);
+            if (match) {
+                name = match[1];
+                content = content.replace(/^\s*\('[^']+'\):/, "").trim();
+            }
+        } else {
             name = "";
         }
         const pattern = /^```markdown\n([\s\S]*)\n```$/;
@@ -370,23 +373,6 @@ function renderMarkdown(md) {
         Developed by <a href="https://github.com/boykopovar/MarkForge" target="_blank">boykopovar</a>
     </div>
     <script>
-        function protectMathFormulas(text) {
-            return text
-                .replace(/\\\\\\(/g, "{{MATH_INLINE_START}}")
-                .replace(/\\\\\\)/g, "{{MATH_INLINE_END}}")
-                .replace(/\\\\\\[/g, "{{MATH_DISPLAY_START}}")
-                .replace(/\\\\\\]/g, "{{MATH_DISPLAY_END}}")
-                .replace(/\\int\{([^}]*)\}\{([^}]*)\}/g, "\\int_{$1}^{$2}");
-        }
-
-        function restoreMathFormulas(html) {
-            return html
-                .replace(/{{MATH_INLINE_START}}/g, '\\\\(')
-                .replace(/{{MATH_INLINE_END}}/g, '\\\\)')
-                .replace(/{{MATH_DISPLAY_START}}/g, '\\\\[')
-                .replace(/{{MATH_DISPLAY_END}}/g, '\\\\]');
-        }
-
         function updateContent() {
             try {
                 document.querySelectorAll("pre").forEach(pre => {
@@ -417,13 +403,11 @@ function renderMarkdown(md) {
                 };
 
                 if (window.MathJax) {
-                    setTimeout(() => {
-                        try {
-                            MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
-                        } catch (e) {
-                            console.error("Не удалось отрендерить MathJax:", e);
-                        }
-                    }, 100);
+                    try {
+                        MathJax.typesetPromise(["#content"]).catch(err => console.error("MathJax error:", err));
+                    } catch (e) {
+                        console.error("Не удалось отрендерить MathJax:", e);
+                    }
                 }
             } catch (e) {
                 console.error("Ошибка при обновлении контента:", e);
@@ -444,7 +428,9 @@ function renderMarkdown(md) {
 
         Prism.plugins.autoloader.languages_path = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/';
 
-        updateContent();
+        document.getElementById("MathJax-script").addEventListener("load", () => {
+            updateContent();
+        });
     </script>
 </body>
 </html>`;
