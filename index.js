@@ -4,79 +4,90 @@ const MAX_FILES = 250;
 
 export default {
     async fetch(request, env) {
-    try {
-        const url = new URL(request.url);
-        const { pathname } = url;
+        try {
+            const url = new URL(request.url);
+            const { pathname } = url;
 
-        if (request.method === "POST") {
-            let markdownText;
-            try {
-                markdownText = await request.text();
-            } catch (e) {
-                markdownText = "# Ошибка\nНе удалось прочитать тело запроса.";
-            }
-            const pageId = generateId();
+            if (request.method === "POST") {
+                let markdownText;
+                try {
+                    markdownText = await request.text();
+                } catch (e) {
+                    markdownText = "# Ошибка\nНе удалось прочитать тело запроса.";
+                }
+                const pageId = generateId();
 
-            try {
-                await env.KV.put(pageId, markdownText);
-                await updateFileList(pageId, env);
-            } catch (e) {
-                return new Response("Ошибка при сохранении контента", {
-                    status: 500,
+                try {
+                    await env.KV.put(pageId, markdownText);
+                    await updateFileList(pageId, env);
+                } catch (e) {
+                    return new Response("Ошибка при сохранении контента", {
+                        status: 500,
+                        headers: { "Content-Type": "text/plain" },
+                    });
+                }
+
+                return new Response(`${url.origin}/view/${pageId}`, {
                     headers: { "Content-Type": "text/plain" },
                 });
             }
 
-            return new Response(`${url.origin}/view/${pageId}`, {
-                headers: { "Content-Type": "text/plain" },
-            });
-        }
-
-        if (request.method === "GET") {
-            let pathParts = pathname.split("/").filter(part => part);
-            
-            if (pathParts[0] === "view") {
-                const pageId = pathParts[pathParts.length - 1];
-                let markdownText;
-                try {
-                    markdownText = await env.KV.get(pageId) || "# Ошибка\nКонтент не найден.";
-                } catch (e) {
-                    markdownText = "# Ошибка\nНе удалось получить контент.";
+            if (request.method === "GET") {
+                let pathParts = pathname.split("/").filter(part => part);
+                
+                if (pathParts[0] === "view") {
+                    const pageId = pathParts[pathParts.length - 1];
+                    let markdownText;
+                    try {
+                        markdownText = await env.KV.get(pageId) || "# Ошибка\nКонтент не найден.";
+                    } catch (e) {
+                        markdownText = "# Ошибка\nНе удалось получить контент.";
+                    }
+                    return new Response(renderMarkdown(markdownText), {
+                        headers: {
+                            "Content-Type": "text/html",
+                            "Cache-Control": "no-cache"
+                        },
+                    });
                 }
-                return new Response(renderMarkdown(markdownText), {
-                    headers: {
-                        "Content-Type": "text/html",
-                        "Cache-Control": "no-cache"
-                    },
-                });
-            }
 
-            if (pathParts[0] === "raw") {
-                const pageId = pathParts[pathParts.length - 1];
-                let markdownText;
-                try {
-                    markdownText = await env.KV.get(pageId);
-                    if (markdownText === null) {
-                        return new Response("# Ошибка\nКонтент не найден.", {
-                            status: 404,
+                if (pathParts[0] === "raw") {
+                    const pageId = pathParts[pathParts.length - 1];
+                    let markdownText;
+                    try {
+                        markdownText = await env.KV.get(pageId);
+                        if (markdownText === null) {
+                            return new Response("# Ошибка\nКонтент не найден.", {
+                                status: 404,
+                                headers: { "Content-Type": "text/plain; charset=utf-8" },
+                            });
+                        }
+                    } catch (e) {
+                        return new Response("# Ошибка\nНе удалось получить контент.", {
+                            status: 500,
                             headers: { "Content-Type": "text/plain; charset=utf-8" },
                         });
                     }
-                } catch (e) {
-                    return new Response("# Ошибка\nНе удалось получить контент.", {
-                        status: 500,
+                    return new Response(markdownText, {
                         headers: { "Content-Type": "text/plain; charset=utf-8" },
                     });
                 }
-                return new Response(markdownText, {
-                    headers: { "Content-Type": "text/plain; charset=utf-8" },
-                });
-            }
 
-            const text = decodeURIComponent(pathname.slice(1));
-            if (!text) {
-                const welcomeMessage = `# Добро пожаловать! ✒️\n\nПохоже, вы не передали текст в URL. 😕 Чтобы отобразить Markdown, просто добавьте его в адресную строку после слэша, например:\n\n\`\`\`\nhttps://your-site.com/Привет,%20**мир**!\n\`\`\`\n\nMarkForge рендерит Markdown с поддержкой LaTeX и чат-формата. Хотите узнать больше? Читайте о проекте на GitHub:\n\n[MarkForge by boykopovar](https://github.com/boykopovar/MarkForge/)`;
-                const processedText = protectMathFormulas(welcomeMessage);
+                const text = decodeURIComponent(pathname.slice(1));
+                if (!text) {
+                    const welcomeMessage = `# Добро пожаловать! ✒️\n\nПохоже, вы не передали текст в URL. 😕 Чтобы отобразить Markdown, просто добавьте его в адресную строку после слэша, например:\n\n\`\`\`\nhttps://your-site.com/Привет,%20**мир**!\n\`\`\`\n\nMarkForge рендерит Markdown с поддержкой LaTeX и чат-формата. Хотите узнать больше? Читайте о проекте на GitHub:\n\n[MarkForge by boykopovar](https://github.com/boykopovar/MarkForge/)`;
+                    const processedText = protectMathFormulas(welcomeMessage);
+                    const parsedHtml = marked.parse(processedText);
+                    const restoredContent = restoreMathFormulas(parsedHtml);
+                    return new Response(renderMarkdown(restoredContent), {
+                        headers: {
+                            "Content-Type": "text/html",
+                            "Cache-Control": "no-cache"
+                        },
+                    });
+                }
+
+                const processedText = protectMathFormulas(text);
                 const parsedHtml = marked.parse(processedText);
                 const restoredContent = restoreMathFormulas(parsedHtml);
                 return new Response(renderMarkdown(restoredContent), {
@@ -87,27 +98,17 @@ export default {
                 });
             }
 
-            const processedText = protectMathFormulas(text);
-            const parsedHtml = marked.parse(processedText);
-            const restoredContent = restoreMathFormulas(parsedHtml);
-            return new Response(renderMarkdown(restoredContent), {
-                headers: {
-                    "Content-Type": "text/html",
-                    "Cache-Control": "no-cache"
-                },
+            return new Response("Используйте POST или GET запрос для загрузки Markdown", {
+                headers: { "Content-Type": "text/plain" },
+            });
+        } catch (e) {
+            return new Response("Внутренняя ошибка сервера", {
+                status: 500,
+                headers: { "Content-Type": "text/plain" },
             });
         }
-
-        return new Response("Используйте POST или GET запрос для загрузки Markdown", {
-            headers: { "Content-Type": "text/plain" },
-        });
-    } catch (e) {
-        return new Response("Внутренняя ошибка сервера", {
-            status: 500,
-            headers: { "Content-Type": "text/plain" },
-        });
     }
-}
+};
 
 function generateId() {
     return Math.random().toString(36).substring(2, 10);
